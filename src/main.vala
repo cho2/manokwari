@@ -23,7 +23,7 @@ int main (string[] args) {
     Gtk.init (ref args);
 
     var id = GLib.Environment.get_variable("DESKTOP_AUTOSTART_ID");
-    var app = new Unique.App ("id.or.blankonlinux.Manokwari", id);
+    var app = new Unique.App ("io.github.cho2.Manokwari", id);
     if (app.is_running ()) {
         stdout.printf ("Manokwari is already running.\n");
         return 0;    
