@@ -294,8 +294,8 @@ public class PanelWindowEntry : DrawingArea {
 
 public class PanelWindowEntryDescriptions : PanelAbstractWindow {
     ArrayList <PanelWindowEntry> stack;
-    unowned HashMap <Wnck.Window, unowned PanelWindowEntry> entry_map;
-    HashMap <unowned PanelWindowEntry, int> position_map;
+    unowned HashMap <Wnck.Window, PanelWindowEntry> entry_map;
+    HashMap <PanelWindowEntry, int> position_map;
     unowned PanelWindowEntry active_entry = null;
     unowned PanelWindowEntry old_entry = null;
     private Pango.Layout pango;
@@ -409,7 +409,7 @@ public class PanelWindowEntryDescriptions : PanelAbstractWindow {
             var pushing = true;
             var backward_start = -1;
 
-            foreach (unowned PanelWindowEntry e in entry_map.values) {
+            foreach (PanelWindowEntry e in entry_map.values) {
 
                 if (e.is_on_current_workspace () == false) {
                     continue;
@@ -559,7 +559,7 @@ public class PanelWindowHost : PanelAbstractWindow {
     private int num_visible_windows = 0;
     const string BRIGHTNESS_PROP_IFACE = "org.gnome.SettingsDaemon.Power.Screen";
     const string BRIGHTNESS_PROP_NAME = "Brightness";
-    private HashMap <unowned Wnck.Window, unowned PanelWindowEntry> entry_map ;
+    private HashMap <Wnck.Window, PanelWindowEntry> entry_map ;
     private int height = 24;
     PanelWindowEntryDescriptions descriptions;
     PanelCalendar calendar;
