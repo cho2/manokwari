@@ -22,12 +22,15 @@ int main (string[] args) {
  
     Gtk.init (ref args);
 
-    var id = GLib.Environment.get_variable("DESKTOP_AUTOSTART_ID");
-    var app = new Unique.App ("io.github.cho2.Manokwari", id);
-    if (app.is_running ()) {
-        stdout.printf ("Manokwari is already running.\n");
-        return 0;    
-    }
+    // STUB (Milestone 1): Unique.App single-instance check removed along with
+    // unique-3.0 (dead upstream). Real replacement is GApplication/GtkApplication
+    // in Milestone 3 -- same app id string carries over unchanged.
+    // var id = GLib.Environment.get_variable("DESKTOP_AUTOSTART_ID");
+    // var app = new Unique.App ("io.github.cho2.Manokwari", id);
+    // if (app.is_running ()) {
+    //     stdout.printf ("Manokwari is already running.\n");
+    //     return 0;
+    // }
 
     PanelSessionManager.getInstance ();
     Bus.own_name(
