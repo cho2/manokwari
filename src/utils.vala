@@ -1,5 +1,8 @@
-using JSCore;
 using Gtk;
+// STUB (Milestone 1): `using JSCore;` removed along with webkitgtk-3.0. The whole
+// JS-bridge block below (js_run_desktop..setup_js_class) is guarded out until
+// Milestone 3 decides how the frontend talks to native code (webkit2gtk-4.1
+// script messages, or a straight rewrite to native GTK widgets).
 
 namespace Utils {
     public bool launch_search () {
@@ -69,6 +72,7 @@ namespace Utils {
     }
 
 
+    /* STUB (Milestone 1) -- begin JSCore bridge block
     public static JSCore.Value js_run_desktop (Context ctx,
             JSCore.Object function,
             JSCore.Object thisObject,
@@ -297,6 +301,8 @@ namespace Utils {
         var s = new String.with_utf8_c_string ("Utils");
         g.set_property (context, s, o, PropertyAttribute.None, null);
     }
+
+    */ // STUB (Milestone 1) -- end JSCore bridge block
 
     public static string get_icon_path (string name, int size=24) {
         var icon = IconTheme.get_default ();

@@ -1,11 +1,10 @@
 using Gtk;
 using GLib;
-using JSCore;
+// STUB (Milestone 1): `using JSCore;` removed. JS-bridge block below guarded out.
 
 public class PanelPlaces {
     StringBuilder json;
-    static Context* jsContext;
-    JSCore.Object* jsObject;
+    // STUB (Milestone 1): static Context* jsContext; / JSCore.Object* jsObject; removed
 
     private VolumeMonitor vol_monitor;
     private File bookmark_file;
@@ -46,16 +45,7 @@ public class PanelPlaces {
 
         json.assign ("");
         init_contents ();
-
-        if (jsContext != null && jsObject != null) {
-
-            var s = new String.with_utf8_c_string ("updateCallback");
-            var v = jsObject->get_property (jsContext, s, null);
-            if (v != null) {
-                s = v.to_string_copy (jsContext, null);
-                jsContext->evaluate_script (s, null, null, 0, null);
-            }
-        }
+        // STUB (Milestone 1): JS-notification body removed along with the JS bridge.
     }
 
     private void init_contents () {
@@ -154,6 +144,7 @@ public class PanelPlaces {
         }
     }
 
+    /* STUB (Milestone 1) -- begin JSCore bridge block
     public static JSCore.Object js_constructor (Context ctx,
             JSCore.Object constructor,
             JSCore.Value[] arguments,
@@ -244,6 +235,8 @@ public class PanelPlaces {
         var s = new String.with_utf8_c_string ("Places");
         g.set_property (context, s, o, PropertyAttribute.None, null);
     }
+
+    */ // STUB (Milestone 1) -- end JSCore bridge block
 
     string get_json () {
         return json.str;

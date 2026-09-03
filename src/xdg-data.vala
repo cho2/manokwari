@@ -1,7 +1,7 @@
 using GMenu;
 using GLib;
-using JSCore;
 using Gtk;
+// STUB (Milestone 1): `using JSCore;` removed. JS-bridge block below guarded out.
 
 // This class opens an xdg menu and populates it
 public class PanelXdgData {
@@ -13,8 +13,7 @@ public class PanelXdgData {
     StringBuilder json; // use StringBuilder to avoid appending immutable strings
     int depth = 0;
     IconTheme icon;
-    static Context* jsContext;
-    JSCore.Object* jsObject;
+    // STUB (Milestone 1): static Context* jsContext; / JSCore.Object* jsObject; removed
     uint scheduled = 0;
     uint64 last_schedule = 0;
 
@@ -57,18 +56,7 @@ public class PanelXdgData {
     }
 
     bool kick_js () {
-        if (jsContext != null && jsObject != null) {
-
-            var s = new String.with_utf8_c_string ("updateCallback");
-            var v = jsObject->get_property (jsContext, s, null);
-            if (v != null) {
-                s = v.to_string_copy (jsContext, null);
-                char buffer[1024];
-                s.get_utf8_c_string (buffer, buffer.length);
-                jsContext->evaluate_script (s, null, null, 0, null);
-                s = null;
-            }
-        }
+        // STUB (Milestone 1): JS-notification body removed along with the JS bridge.
         // Save the time
         var d = new DateTime.now_local();
         last_schedule = d.to_unix ();
@@ -223,6 +211,7 @@ public class PanelXdgData {
 
     }
 
+    /* STUB (Milestone 1) -- begin JSCore bridge block
     public static JSCore.Object js_constructor (Context ctx,
             JSCore.Object constructor,
             JSCore.Value[] arguments,
@@ -341,6 +330,8 @@ public class PanelXdgData {
         var s = new String.with_utf8_c_string ("XdgDataBackEnd");
         g.set_property (context, s, o, PropertyAttribute.None, null);
     }
+
+    */ // STUB (Milestone 1) -- end JSCore bridge block
 
     static void show_dialog (string message) {
         var dialog = new MessageDialog (null, DialogFlags.DESTROY_WITH_PARENT, MessageType.ERROR, ButtonsType.CLOSE, "%s", message);

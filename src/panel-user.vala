@@ -1,5 +1,5 @@
 using Gtk;
-using JSCore;
+// STUB (Milestone 1): `using JSCore;` removed. JS-bridge block below guarded out.
 
 [DBus (name = "org.freedesktop.Accounts")]
 interface XdgAccounts: GLib.Object {
@@ -81,6 +81,7 @@ public class PanelUser {
         }
     }
 
+    /* STUB (Milestone 1) -- begin JSCore bridge block
     public static JSCore.Object js_constructor (Context ctx,
             JSCore.Object constructor,
             JSCore.Value[] arguments,
@@ -188,5 +189,6 @@ public class PanelUser {
         var s = new String.with_utf8_c_string ("UserAccount");
         g.set_property (context, s, o, PropertyAttribute.None, null);
     }
+    */ // STUB (Milestone 1) -- end JSCore bridge block
 
 }
