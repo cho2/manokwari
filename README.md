@@ -1,5 +1,7 @@
 # Manokwari (Reborn)
 
+[![build result](https://build.opensuse.org/projects/home:cho2/packages/manokwari/badge.svg?type=default)](https://build.opensuse.org/package/show/home:cho2/manokwari)
+
 > **Catatan:** Ini adalah fork independen dari [BlankOn/manokwari](https://github.com/BlankOn/manokwari),
 > tidak lagi berafiliasi dengan proyek atau distro BlankOn Linux. Dikembangkan sebagai proyek pribadi/hobi
 > untuk membawa Manokwari ke toolchain modern, melepas ketergantungan GNOME, dan dapat dibangun di
