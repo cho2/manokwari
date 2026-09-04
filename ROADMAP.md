@@ -44,27 +44,39 @@ bukan dihapus, supaya keputusan lama tetap terlihat alasannya.
 - [x] Fix kompatibilitas Vala modern: 3 error generic-ownership `Gee.HashMap` di
       `panel-window.vala` (Vala 0.56 lebih strict dari compiler saat kode ini ditulis)
 - [x] Diverifikasi **build hijau di dua toolchain**: Ubuntu 24.04 (proxy awal) dan
-      openSUSE Tumbleweed asli (lewat WSL)
+      openSUSE Tumbleweed
 - [x] `BUILDING.md` — daftar paket zypper terverifikasi (lewat `pkgconfig(...)`
       lookup, bukan tebakan nama paket) + troubleshooting (paket devel yang beda
-      konvensi penamaan, `libgio-2.0.so.0` yang sempat corrupt di WSL)
+      konvensi penamaan, `libgio-2.0.so.0` yang sempat corrupt di openSUSE Tumbleweed)
 - Dikirim sebagai 4 commit terpisah (lihat riwayat git branch `reborn`):
   `build: bump gee to 0.8, drop dead unique-3.0/webkitgtk-3.0 deps` ·
   `refactor(main): guard out Unique.App single-instance check` ·
   `refactor: guard out WebKit/JSCore bridge, add native placeholder views` ·
   `fix(panel-window): resolve Gee.HashMap generic ownership errors`
 
-### 🔜 Milestone 2 — Setup OBS & Loop Packaging (Berikutnya)
+### ✅ Milestone 2 — Setup OBS & Loop Packaging (Selesai)
 *(scope: openSUSE Tumbleweed saja dulu — bukan multi-distro sekaligus)*
-- [ ] Buat home project di build.opensuse.org (mis. `home:cho2:manokwari`), install `osc`
-- [ ] `_service` dengan `tar_scm`/`obs_scm` supaya OBS otomatis tarik source dari
-      `github.com/cho2/manokwari` branch `reborn` per tag
-- [ ] `.spec` RPM — `BuildRequires` pakai daftar paket dari `BUILDING.md` yang sudah
-      terverifikasi
-- [ ] Tambahkan repository target: **openSUSE Tumbleweed saja**
-- [ ] Exit criteria: paket build hijau lewat OBS (bukan cuma lokal lagi)
+- [x] Home project `home:cho2`, package `manokwari` dibuat via `osc mkpac`
+- [x] `manokwari.spec` — `BuildRequires` pakai pola `pkgconfig(<module>)`, bukan nama
+      paket RPM literal, supaya tidak rapuh terhadap perbedaan penamaan antar
+      snapshot/distro (pelajaran dari drama nama paket di Milestone 1)
+- [x] Fix "directories not owned by a package" — `%dir` eksplisit untuk
+      `/usr/share/gnome-session/sessions` dan 3 direktori locale daerah
+      (`gay`, `jv`, `su`) yang tidak ter-cover paket dasar sistem
+- [x] Tarball sumber dibuat manual dulu (`git archive`) untuk percobaan pertama,
+      bukan langsung pakai `_service`/`tar_scm` otomatis — mengurangi jumlah
+      mekanisme baru yang belum teruji sekaligus
+- [x] **Build sukses di server OBS**: `openSUSE_Tumbleweed x86_64: succeeded`
+      (arch `i586` sengaja tidak diaktifkan — tidak relevan untuk target ini)
+- **Status `_service` (tar_scm otomatis):** file-nya sudah pernah dirancang (draft),
+  tapi **belum pernah dipakai atau diuji sama sekali** — build yang berhasil di atas
+  pakai tarball manual (`git archive`), bukan `_service` ini. Belum di-`osc add`,
+  belum masuk checkout OBS, belum masuk git repo. Kalau nanti mau otomasi
+  "auto-fetch dari GitHub" (ganti tarball manual → `tar_scm`), ini titik mulainya —
+  tapi anggap sebagai pekerjaan baru dari nol, bukan sesuatu yang tinggal
+  diaktifkan begitu saja.
 
-### ⏳ Milestone 3 — Lepas Dependensi GNOME-Lock (Belum mulai penuh)
+### 🔜 Milestone 3 — Lepas Dependensi GNOME-Lock (Berikutnya)
 Sebagian pre-work sudah lewat di Milestone 1 (lihat catatan per item):
 - [x] ~~`gee-1.0` → `gee-0.8`~~ — **selesai** di Milestone 1
 - [ ] `unique-3.0` → `GApplication`/`GtkApplication` — dependency sudah dihapus,
