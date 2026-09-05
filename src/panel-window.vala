@@ -557,14 +557,20 @@ public class PanelWindowHost : PanelAbstractWindow {
     private PanelTray tray;
     private new Wnck.Screen screen;
     private int num_visible_windows = 0;
-    const string BRIGHTNESS_PROP_IFACE = "org.gnome.SettingsDaemon.Power.Screen";
-    const string BRIGHTNESS_PROP_NAME = "Brightness";
+    // Milestone 3: brightness now goes through org.freedesktop.login1 (systemd-
+    // logind) + sysfs instead of org.gnome.SettingsDaemon.Power.Screen. logind
+    // only exposes a SetBrightness *method* (no getter) by design -- current
+    // value is read straight from sysfs, matching how brightnessctl and other
+    // standalone brightness tools do it. See find_backlight_device() /
+    // get_brightness_percent() / set_brightness_percent() below.
+    private string? backlight_device = null;
+    private int max_brightness = 0;
+    private Login1Session? login1_session = null;
     private HashMap <Wnck.Window, PanelWindowEntry> entry_map ;
     private int height = 24;
     PanelWindowEntryDescriptions descriptions;
     PanelCalendar calendar;
     PanelHotkey hotkey;
-    DBusProperties bus;
     Notify.Notification indicator;
 
     public signal void windows_gone (); // Emitted when all windows have gone, either closed or minimized
@@ -581,12 +587,18 @@ public class PanelWindowHost : PanelAbstractWindow {
     }
 
     public PanelWindowHost () {
-        try {
-            bus = Bus.get_proxy_sync (BusType.SESSION, "org.gnome.SettingsDaemon.Power", "/org/gnome/SettingsDaemon/Power");
-        } catch (Error e) {
-            stderr.printf ("Unable to connect to power manager\n");
+        find_backlight_device ();
+        if (backlight_device != null) {
+            try {
+                Login1Manager manager = Bus.get_proxy_sync (BusType.SYSTEM,
+                    "org.freedesktop.login1", "/org/freedesktop/login1");
+                var session_path = manager.get_session_by_pid ((uint32) Posix.getpid ());
+                login1_session = Bus.get_proxy_sync (BusType.SYSTEM,
+                    "org.freedesktop.login1", session_path);
+            } catch (Error e) {
+                stderr.printf ("Unable to connect to logind: %s\n", e.message);
+            }
         }
-
 
         indicator = new Notify.Notification("Manokwari", "", Utils.get_icon_path("display-brightness"));
         indicator.set_timeout(5);
@@ -829,15 +841,68 @@ public class PanelWindowHost : PanelAbstractWindow {
     }
 
 
+    // Scans /sys/class/backlight for a device and records its max_brightness.
+    // Picks the first entry found -- good enough for the common single-panel
+    // laptop case this hobby project targets; multi-GPU setups with several
+    // backlight devices aren't handled specially.
+    void find_backlight_device () {
+        try {
+            var dir = Dir.open ("/sys/class/backlight");
+            string? name;
+            while ((name = dir.read_name ()) != null) {
+                backlight_device = name;
+                break;
+            }
+        } catch (FileError e) {
+            stderr.printf ("No backlight device found: %s\n", e.message);
+            return;
+        }
+        if (backlight_device == null) return;
+        try {
+            string contents;
+            FileUtils.get_contents ("/sys/class/backlight/" + backlight_device + "/max_brightness", out contents);
+            max_brightness = int.parse (contents.strip ());
+        } catch (FileError e) {
+            stderr.printf ("Unable to read max_brightness: %s\n", e.message);
+            max_brightness = 0;
+        }
+    }
+
+    int get_brightness_percent () {
+        if (backlight_device == null || max_brightness <= 0) {
+            return -1;
+        }
+        try {
+            string contents;
+            FileUtils.get_contents ("/sys/class/backlight/" + backlight_device + "/brightness", out contents);
+            int raw = int.parse (contents.strip ());
+            return (int) ((raw * 100.0) / max_brightness);
+        } catch (FileError e) {
+            stderr.printf ("Unable to read brightness: %s\n", e.message);
+            return -1;
+        }
+    }
+
+    void set_brightness_percent (int percent) {
+        if (login1_session == null || backlight_device == null || max_brightness <= 0) {
+            return;
+        }
+        uint32 raw = (uint32) ((percent / 100.0) * max_brightness);
+        try {
+            login1_session.set_brightness ("backlight", backlight_device, raw);
+        } catch (Error e) {
+            stderr.printf ("Unable to set brightness: %s\n", e.message);
+        }
+    }
+
     void showBrightnessIndicator(int value) {
         indicator.set_hint("value", value);
         indicator.show ();
     }
 
     void handleBrightnessUp() {
-        if (bus == null) return;
-        var value = bus.get(BRIGHTNESS_PROP_IFACE, BRIGHTNESS_PROP_NAME);
-        int32 val = value.get_int32();
+        var val = get_brightness_percent ();
+        if (val < 0) return;
 
         if (val + 10 > 100) {
           val = 100;
@@ -845,13 +910,12 @@ public class PanelWindowHost : PanelAbstractWindow {
           val += 10;
         }
         showBrightnessIndicator(val);
-        bus.set(BRIGHTNESS_PROP_IFACE, BRIGHTNESS_PROP_NAME, new Variant.int32(val));
+        set_brightness_percent (val);
     }
 
     void handleBrightnessDown() {
-        if (bus == null) return;
-        var value = bus.get(BRIGHTNESS_PROP_IFACE, BRIGHTNESS_PROP_NAME);
-        int32 val = value.get_int32();
+        var val = get_brightness_percent ();
+        if (val < 0) return;
 
         if (val - 10 < 10) {
           val = 0;
@@ -859,6 +923,6 @@ public class PanelWindowHost : PanelAbstractWindow {
           val -= 10;
         }
         showBrightnessIndicator(val);
-        bus.set(BRIGHTNESS_PROP_IFACE, BRIGHTNESS_PROP_NAME, new Variant.int32(val));
+        set_brightness_percent (val);
     }
 }

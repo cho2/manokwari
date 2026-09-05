@@ -46,6 +46,12 @@ dep_libwnck = dependency('libwnck-3.0', version: '>= 3.0.0')
 # configure/compile again; corresponding code is guarded out below.
 dep_x11 = dependency('x11', version: '>= 1.6.0')
 dep_libnotify = dependency('libnotify', version: '>= 0.7.6')
+# Milestone 3: brightness (src/panel-window.vala) no longer needs this -- it
+# now goes through org.freedesktop.login1 + sysfs. Kept here only because
+# files/sessions/meson.build still uses dep_gsd.version() to pick which GSD
+# components to require in the session file. That's the still-untouched
+# "session manager + mutter requirement" item from INVENTORY.md/ROADMAP.md,
+# not part of this change.
 dep_gsd = dependency('gnome-settings-daemon', version: gnome_minimum_version)
 
 # Create config.h

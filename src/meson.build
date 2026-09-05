@@ -24,7 +24,7 @@ manokwari_panel_sources = [
     'animated-property.vala',
     'panel-shell.vala',
     'panel-socket.vala',
-    'panel-xdg-properties.vala',
+    'login1.vala',
 ]
 
 manokwari_panel_deps = [
@@ -47,6 +47,7 @@ executable(
     include_directories: extra_includes,
     vala_args: [
         '--pkg', 'config',
+        '--pkg', 'posix',
         '--vapidir', manokwari_vapi,
         '--pkg', 'atk',
         '--pkg', 'x11',
