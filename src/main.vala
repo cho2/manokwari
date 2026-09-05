@@ -1,6 +1,22 @@
 using Gtk;
 int main (string[] args) {
 
+    // Milestone 3: unique-3.0 replaced with GLib.Application. register() claims
+    // the app id as a well-known D-Bus name on the session bus -- same mechanism
+    // Unique.App used internally, just via the generic freedesktop/GIO API instead
+    // of a dead GNOME-only library. Same app id string as before, unchanged.
+    var app = new GLib.Application ("io.github.cho2.Manokwari", ApplicationFlags.FLAGS_NONE);
+    try {
+        app.register ();
+    } catch (GLib.Error e) {
+        stderr.printf ("Unable to register application: %s\n", e.message);
+    }
+
+    if (app.get_is_remote ()) {
+        stdout.printf ("Manokwari is already running.\n");
+        return 0;
+    }
+
     var settings = new GLib.Settings ("org.gnome.system.locale");
     var region = settings.get_string ("region");
 
@@ -21,16 +37,6 @@ int main (string[] args) {
 
  
     Gtk.init (ref args);
-
-    // STUB (Milestone 1): Unique.App single-instance check removed along with
-    // unique-3.0 (dead upstream). Real replacement is GApplication/GtkApplication
-    // in Milestone 3 -- same app id string carries over unchanged.
-    // var id = GLib.Environment.get_variable("DESKTOP_AUTOSTART_ID");
-    // var app = new Unique.App ("io.github.cho2.Manokwari", id);
-    // if (app.is_running ()) {
-    //     stdout.printf ("Manokwari is already running.\n");
-    //     return 0;
-    // }
 
     PanelSessionManager.getInstance ();
     Bus.own_name(
