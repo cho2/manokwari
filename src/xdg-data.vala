@@ -1,6 +1,7 @@
-using GMenu;
 using GLib;
 using Gtk;
+// STUB (Milestone 3): `using GMenu;` removed along with libgnome-menu-3.0.
+// update_tree()/populate() below guarded out -- see comment there.
 // STUB (Milestone 1): `using JSCore;` removed. JS-bridge block below guarded out.
 
 // This class opens an xdg menu and populates it
@@ -91,6 +92,15 @@ public class PanelXdgData {
         }
     }
 
+    // STUB (Milestone 3): update_tree()/populate() depended on GMenu.Tree
+    // (libgnome-menu-3.0), which is dropped now that both call sites of
+    // PanelXdgData are already dead code (one in the excluded panel-menu-html.vala,
+    // one inside the Milestone-1-guarded JS bridge block below). Reimplementing
+    // this with GDesktopAppInfo is deferred until the WebKit UI decision is made
+    // (Milestone 3) -- the right shape for "menu data" depends on whether that
+    // lands as webkit2gtk-4.1 (could keep a similar JSON-to-JS approach) or a
+    // native GTK rewrite (would populate widgets directly, no JSON at all).
+    /*
     void update_tree (TreeDirectory root) {
         var iter = root.iter();
         GMenu.TreeItemType type;
@@ -156,6 +166,7 @@ public class PanelXdgData {
         }
         json.append("]");
     }
+    */ // STUB (Milestone 3) -- end guarded GMenu.Tree block
 
     static void put_to_desktop (string filename) {
         var input_file = File.new_for_path (filename);

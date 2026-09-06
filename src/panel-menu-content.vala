@@ -1,4 +1,3 @@
-using GMenu;
 using Gtk;
 
 // This class provides a header and containter to put contents 

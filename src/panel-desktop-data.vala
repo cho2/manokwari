@@ -1,4 +1,3 @@
-using GMenu;
 using GLib;
 using Gtk;
 // STUB (Milestone 1): `using JSCore;` removed. JS-bridge block below guarded out.

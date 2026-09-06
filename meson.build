@@ -38,7 +38,8 @@ dep_gtk3 = dependency('gtk+-3.0', version: gnome_minimum_version)
 dep_atk = dependency('atk', version: '>= 2.0.0')
 dep_gee = dependency('gee-0.8', version: '>= 0.20.0')
 dep_cairo = dependency('cairo', version: '>= 1.10.2')
-dep_libgnomemenu = dependency('libgnome-menu-3.0', version: '>= 2.30.5')
+# STUB (Milestone 3): dependency('libgnome-menu-3.0', ...) removed -- its only
+# consumer (GMenu.Tree in xdg-data.vala) is now guarded out, see that file.
 dep_libwnck = dependency('libwnck-3.0', version: '>= 3.0.0')
 # STUB (Milestone 1): unique-3.0 and webkitgtk-3.0 no longer exist in any current
 # distro. Real replacements land in Milestone 3 (unique -> GApplication, webkit ->

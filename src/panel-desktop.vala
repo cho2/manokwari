@@ -1,6 +1,5 @@
 using Gtk;
 using Cairo;
-using GMenu;
 
 
 public class PanelDesktop: PanelAbstractWindow {

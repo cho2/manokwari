@@ -34,7 +34,6 @@ manokwari_panel_deps = [
     dep_x11,
     dep_gee,
     dep_cairo,
-    dep_libgnomemenu,
     dep_libnotify,
     dep_libwnck,
 ]
@@ -56,7 +55,6 @@ executable(
         '--pkg', 'cairo',
         '--pkg', 'gtk+-3.0',
         '--pkg', 'gio-unix-2.0',
-        '--pkg', 'libgnome-menu-3.0',
         '--pkg', 'gdk-3.0',
         '--pkg', 'libwnck-3.0',
         '--pkg', 'libnotify',
