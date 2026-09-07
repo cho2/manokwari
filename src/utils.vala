@@ -66,9 +66,31 @@ namespace Utils {
 
     public void ungrab (Gtk.Window w) {
         var device = Gtk.get_current_event_device();
+
+        // Same fallback grab() already had -- try_hide() is often called from
+        // a signal relay (dialog_opened/desktop_clicked/windows_visible in
+        // main.vala), not directly from a raw GDK event, so
+        // get_current_event_device() legitimately returns null there. The
+        // original code had no null-check at all, causing three
+        // Gdk-CRITICAL "assertion 'GDK_IS_DEVICE (device)' failed" warnings
+        // every time that happened (confirmed on real hardware, not just
+        // sandbox testing).
+        if (device == null) {
+            var display = w.get_display ();
+            var manager = display.get_device_manager ();
+            var devices = manager.list_devices (Gdk.DeviceType.MASTER).copy();
+            device = devices.data;
+        }
+
+        if (device == null) {
+            return;
+        }
+
         var secondary = device.get_associated_device();
         device.ungrab(Gdk.CURRENT_TIME);
-        secondary.ungrab(Gdk.CURRENT_TIME);
+        if (secondary != null) {
+            secondary.ungrab(Gdk.CURRENT_TIME);
+        }
     }
 
 
