@@ -53,7 +53,6 @@ required at runtime. See ROADMAP.md upstream for current status.
 %dir %{_datadir}/gnome-session/sessions
 %{_datadir}/gnome-session/sessions/blankon.session
 %{_sysconfdir}/xdg/menus/manokwari-applications.menu
-%{_libdir}/%{name}/
 %{_datadir}/locale/id/LC_MESSAGES/%{name}.mo
 %dir %{_datadir}/locale/gay
 %dir %{_datadir}/locale/gay/LC_MESSAGES

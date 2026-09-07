@@ -14,7 +14,7 @@ manokwari_panel_sources = [
     'panel-hotkey.vala',
     'panel-session-manager.vala',
     # 'panel-menu-html.vala',      # STUB (Milestone 1): needs WebKit, see Milestone 3
-    'panel-html-stubs.vala',
+    'panel-desktop-native.vala',
     'panel-menu-native.vala',
     'xdg-data.vala',
     'panel-user.vala',

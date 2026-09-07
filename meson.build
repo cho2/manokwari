@@ -75,7 +75,11 @@ datadir = join_paths(prefix, get_option('datadir'))
 localedir = join_paths(prefix, get_option('localedir'))
 podir = join_paths(meson.source_root(), 'po')
 
-manokwari_system_path = join_paths(libdir, 'manokwari', 'system')
+# STUB (Milestone 3, Fase 2): manokwari_system_path / SYSTEM_PATH removed --
+# it pointed to the system/ dir of jQuery/moment.js/weather-widget assets
+# consumed only by panel-desktop-html.vala and panel-menu-html.vala, both
+# excluded from the build since Milestone 1. Zero live code references
+# SYSTEM_PATH anymore (confirmed with a full grep before removing this).
 manokwari_session_path = join_paths(datadir, 'gnome-session', 'sessions')
 manokwari_xsession_path = join_paths(datadir, 'xsessions')
 
@@ -86,7 +90,6 @@ manokwari_xsession_path = join_paths(datadir, 'xsessions')
 # Later changed to use intltool as we use _Key style files
 intltool = find_program('intltool-merge')
 
-cdata.set_quoted('SYSTEM_PATH', manokwari_system_path)
 cdata.set_quoted('SESSIONS_PATH', manokwari_session_path)
 cdata.set_quoted('XSESSIONS_PATH', manokwari_xsession_path)
 cdata.set_quoted('BIN_PATH', bindir)
@@ -105,6 +108,9 @@ extra_includes = [
 
 subdir('po')
 subdir('src')
-subdir('system')
+# STUB (Milestone 3, Fase 2): subdir('system') removed -- see the SYSTEM_PATH
+# comment above. The system/ directory itself is left in the tree untouched
+# (not deleted) in case Milestone 3's WebKit option is ever revisited, but
+# it's no longer built or installed.
 subdir('data')
 subdir('files')
