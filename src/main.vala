@@ -39,19 +39,10 @@ int main (string[] args) {
     Gtk.init (ref args);
 
     PanelSessionManager.getInstance ();
-    Bus.own_name(
-        BusType.SESSION,
-        "org.gnome.Panel",
-        0,
-        () => {},
-        () => {},
-        () => {
-          stderr.printf ("Unable to claim Panel from gnome-session");
-        }
-    );
-
-    // Shell
-    var shell = new PanelShell();
+    // Milestone 3: Bus.own_name("org.gnome.Panel", ...) removed -- it only
+    // existed to signal gnome-session "the panel started", which no longer
+    // applies (see files/bin/manokwari-session). Same for `new PanelShell()`
+    // below -- see the comment in panel-shell.vala.
 
     // Desktop
     var d = new PanelDesktop ();

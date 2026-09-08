@@ -10,7 +10,7 @@ project(
     default_options: [
         'c_std=c11',
     ],
-    meson_version: '>= 0.37',
+    meson_version: '>= 0.38',
 )
 
 am_cflags = [
@@ -47,13 +47,14 @@ dep_libwnck = dependency('libwnck-3.0', version: '>= 3.0.0')
 # configure/compile again; corresponding code is guarded out below.
 dep_x11 = dependency('x11', version: '>= 1.6.0')
 dep_libnotify = dependency('libnotify', version: '>= 0.7.6')
-# Milestone 3: brightness (src/panel-window.vala) no longer needs this -- it
-# now goes through org.freedesktop.login1 + sysfs. Kept here only because
-# files/sessions/meson.build still uses dep_gsd.version() to pick which GSD
-# components to require in the session file. That's the still-untouched
-# "session manager + mutter requirement" item from INVENTORY.md/ROADMAP.md,
-# not part of this change.
-dep_gsd = dependency('gnome-settings-daemon', version: gnome_minimum_version)
+# STUB (Milestone 3): dependency('gnome-settings-daemon', ...) fully removed.
+# It went through two stages: brightness (src/panel-window.vala) stopped
+# needing it back when that switched to org.freedesktop.login1 + sysfs, but
+# it stayed declared because files/sessions/meson.build still used
+# dep_gsd.version() to pick GSD components for the session's
+# RequiredComponents list. That whole gnome-session session file is gone
+# now too (see files/bin/manokwari-session, Openbox-based), so nothing
+# references gnome-settings-daemon anywhere in this project anymore.
 
 # Create config.h
 cdata = configuration_data()

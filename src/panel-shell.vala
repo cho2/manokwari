@@ -132,27 +132,15 @@ public class PanelEndSessionDialog: Object {
     }
 }
 
-public class PanelShell : Object {
-    public PanelShell() {
-        Bus.own_name(
-            BusType.SESSION,
-            "org.gnome.Shell",
-            0,
-            () => {},
-            on_name_acquired,
-            () => {
-              stdout.printf ("Unable to claim Shell from gnome-session");
-            }
-        );
-    }
-
-    void on_name_acquired(DBusConnection conn, string name) {
-        try {
-            conn.register_object("/org/gnome/SessionManager/EndSessionDialog", new PanelEndSessionDialog());
-            stderr.printf("EndSessionDialog hooked\n");
-        } catch (IOError e) {
-            stderr.printf("Unable to hook EndSessionDialog\n");
-        }
-    }
-
-}
+// Milestone 3: PanelShell removed. It existed purely to claim the
+// org.gnome.Shell D-Bus name and register /org/gnome/SessionManager/
+// EndSessionDialog so gnome-session would call *us* for the shutdown/
+// reboot/logout confirmation dialog -- meaningless without gnome-session.
+//
+// PanelEndSessionDialog itself is kept as-is below: it's a self-contained
+// GTK dialog with no gnome-session dependency in its own logic. It's not
+// wired up to anything right now (Fase 1's session buttons in
+// panel-menu-native.vala call PanelSessionManager directly, no confirmation
+// step) -- reusing it as a local "are you sure?" dialog before those calls
+// would be a nice small follow-up, just not done here to keep this change
+// focused on the session/WM replacement itself.

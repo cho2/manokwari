@@ -1,29 +1,22 @@
 using Gtk;
 // STUB (Milestone 1): `using JSCore;` removed. JS-bridge block below guarded out.
 
-[DBus (name = "org.gnome.SessionManager")]
-interface SessionManager : GLib.Object {
-    public abstract void register_client (string app_id, string startup_id, out ObjectPath path) throws IOError;
-    public abstract async void shutdown () throws IOError;
-    public abstract async void reboot () throws IOError;
-
-    public abstract async void logout (uint32 mode) throws IOError;
-    public abstract bool can_shutdown () throws IOError;
-}
-
-[DBus (name = "org.gnome.SessionManager.ClientPrivate")]
-interface ClientPrivate: GLib.Object {
-    public abstract void end_session_response(bool ok, string reason) throws IOError;
-    public signal void query_end_session(uint flags);
-    public signal void end_session(uint flags);
-}
-
+// Milestone 3: org.gnome.SessionManager / .ClientPrivate removed along with
+// gnome-session itself. Manokwari no longer runs inside a gnome-session --
+// see files/bin/manokwari-session, which execs Openbox directly (picom
+// and manokwari itself started via Openbox's own autostart mechanism).
+//
+// reboot()/shutdown()/can_shutdown() now go through org.freedesktop.login1
+// (systemd-logind) instead -- same freedesktop-standard mechanism already
+// used for brightness (login1.vala). logout() has no systemd/logind
+// equivalent (logind manages sessions, not desktop "log out of the GUI"
+// semantics) -- it uses Openbox's own documented exit mechanism instead
+// ("openbox --exit" asks a running Openbox instance to shut down, which
+// ends the X session since Openbox is the session's foreground process).
 
 public class PanelSessionManager {
-    static ObjectPath session_id = null;
-    private SessionManager session = null;
-    private ClientPrivate client = null;
     static PanelSessionManager instance = null;
+    private Login1Manager login1 = null;
 
     public static PanelSessionManager getInstance () {
         if (instance == null) {
@@ -35,101 +28,55 @@ public class PanelSessionManager {
 
     private PanelSessionManager () {
         try {
-            session =  Bus.get_proxy_sync (BusType.SESSION,
-                                           "org.gnome.SessionManager", "/org/gnome/SessionManager");
+            login1 = Bus.get_proxy_sync (BusType.SYSTEM,
+                                          "org.freedesktop.login1", "/org/freedesktop/login1");
         } catch (Error e) {
-            stderr.printf ("Unable to connect to session manager\n");
-        }
-        if (session_id == null) {
-            register();
-        }
-    }
-
-    public void register () {
-         if (session != null) {
-            try {
-                var id = GLib.Environment.get_variable("DESKTOP_AUTOSTART_ID");
-                if (id != null) {
-                    session.register_client ("manokwari", id, out session_id);
-                    client =  Bus.get_proxy_sync (BusType.SESSION,
-                                                   "org.gnome.SessionManager", session_id);
-                    client.end_session.connect((flags)=> {
-                        send_end_response ();
-                        Gtk.main_quit();
-                    });
-                    client.query_end_session.connect((flags)=> {
-                        send_end_response ();
-                    });
-
-                }
-            } catch (Error e) {
-                stderr.printf ("Unable to register session: %s\n", e.message);
-            }
-        }
-    }
-
-    void send_end_response () {
-        if (client != null) {
-            try {
-                client.end_session_response(true, "");
-            } catch (IOError e) {
-                stderr.printf ("Unable to send data to session manager: %s\n", e.message);
-            }
+            stderr.printf ("Unable to connect to logind: %s\n", e.message);
         }
     }
 
     public async void logout () {
-        if (session == null) {
-            return;
+        try {
+            Process.spawn_command_line_async ("openbox --exit");
+        } catch (SpawnError e) {
+            stderr.printf ("Unable to exit Openbox: %s\n", e.message);
         }
-
-        Idle.add(() => {
-            try {
-                session.logout(0);
-            } catch (Error e) {
-                stderr.printf("Unable to logout: %s\n", e.message);
-            }
-            return false;
-        });
     }
 
     public async void reboot () {
-        if (session == null) {
+        if (login1 == null) {
             return;
         }
-
-        Idle.add(() => {
-            try {
-                session.reboot.begin();
-            } catch (Error e) {
-                stderr.printf("Unable to reboot: %s\n", e.message);
-            }
-            return false;
-        });
+        try {
+            login1.reboot (true);
+        } catch (Error e) {
+            stderr.printf ("Unable to reboot: %s\n", e.message);
+        }
     }
 
-
     public async void shutdown () {
-        if (session == null) {
+        if (login1 == null) {
             return;
         }
-
-        Idle.add(() => {
-            try {
-                session.shutdown.begin();
-            } catch (Error e) {
-                stderr.printf("Unable to shutdown: %s\n", e.message);
-            }
-            return false;
-        });
+        try {
+            login1.power_off (true);
+        } catch (Error e) {
+            stderr.printf ("Unable to shutdown: %s\n", e.message);
+        }
     }
 
     public bool can_shutdown () {
+        if (login1 == null) {
+            return false;
+        }
         try {
-            session.can_shutdown ();
-            return true;
+            // CanPowerOff() returns "yes" / "no" / "challenge" (challenge
+            // means it's possible but needs authentication) per logind's
+            // convention -- anything other than a plain "no" counts as
+            // available here.
+            return login1.can_power_off () != "no";
         } catch (Error e) {
-            stdout.printf ("Unable to shutdown\n");
+            stderr.printf ("Unable to query shutdown availability: %s\n", e.message);
             return false;
         }
     }

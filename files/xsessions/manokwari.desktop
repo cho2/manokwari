@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Manokwari
+Comment=This session logs you into Manokwari
+Exec=manokwari-session
+TryExec=/usr/bin/manokwari
+Icon=
+Type=Application
+DesktopNames=Manokwari

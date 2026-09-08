@@ -1,4 +1,4 @@
 install_data(
-    'blankon.desktop',
+    'manokwari.desktop',
     install_dir: join_paths(get_option('datadir'), 'xsessions'),
 )

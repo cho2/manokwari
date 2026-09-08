@@ -22,15 +22,22 @@ BuildRequires:  pkgconfig(cairo)
 BuildRequires:  pkgconfig(libwnck-3.0)
 BuildRequires:  pkgconfig(libnotify)
 BuildRequires:  pkgconfig(x11)
-BuildRequires:  pkgconfig(gnome-settings-daemon)
+
+# Milestone 3: Manokwari pairs with Openbox (window manager, EWMH-compliant
+# for the libwnck-based taskbar) and picom (compositing, needed for the
+# clock widget's RGBA transparency) instead of gnome-session + mutter.
+# See files/bin/manokwari-session.
+Requires:       openbox
+Requires:       picom
 
 %description
 Manokwari (Reborn) is an independent fork of the BlankOn Manokwari desktop
-panel (https://github.com/BlankOn/manokwari), being modernized and
-decoupled from GNOME-specific dependencies. This is an early-stage hobby
-project: the WebKit-based frontend is currently stubbed out, and several
-GNOME components (gnome-session, gnome-settings-daemon, mutter) are still
-required at runtime. See ROADMAP.md upstream for current status.
+panel (https://github.com/BlankOn/manokwari), modernized and decoupled
+from GNOME-specific dependencies. It pairs with Openbox (window manager)
+and picom (compositing) instead of gnome-session/mutter. This is an
+early-stage hobby project -- the original WebKit-based frontend has been
+replaced with native GTK widgets. See ROADMAP.md upstream for current
+status.
 
 %prep
 %setup -q
@@ -46,12 +53,9 @@ required at runtime. See ROADMAP.md upstream for current status.
 %license COPYING
 %doc README.md ROADMAP.md INVENTORY.md
 %{_bindir}/manokwari
-%{_bindir}/blankon-session
+%{_bindir}/manokwari-session
 %{_datadir}/applications/manokwari.desktop
-%{_datadir}/xsessions/blankon.desktop
-%dir %{_datadir}/gnome-session
-%dir %{_datadir}/gnome-session/sessions
-%{_datadir}/gnome-session/sessions/blankon.session
+%{_datadir}/xsessions/manokwari.desktop
 %{_sysconfdir}/xdg/menus/manokwari-applications.menu
 %{_datadir}/locale/id/LC_MESSAGES/%{name}.mo
 %dir %{_datadir}/locale/gay
