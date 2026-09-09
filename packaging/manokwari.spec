@@ -54,9 +54,7 @@ status.
 %doc README.md ROADMAP.md INVENTORY.md
 %{_bindir}/manokwari
 %{_bindir}/manokwari-session
-%{_datadir}/applications/manokwari.desktop
 %{_datadir}/xsessions/manokwari.desktop
-%{_sysconfdir}/xdg/menus/manokwari-applications.menu
 %{_datadir}/locale/id/LC_MESSAGES/%{name}.mo
 %dir %{_datadir}/locale/gay
 %dir %{_datadir}/locale/gay/LC_MESSAGES

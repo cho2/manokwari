@@ -113,5 +113,11 @@ subdir('src')
 # comment above. The system/ directory itself is left in the tree untouched
 # (not deleted) in case Milestone 3's WebKit option is ever revisited, but
 # it's no longer built or installed.
-subdir('data')
+# STUB (Milestone 4): subdir('data') removed -- that directory held only
+# manokwari.desktop.in (dead: NoDisplay=true, and its only real purpose was
+# X-GNOME-Autostart-Phase/-Provides/-Notify, gnome-session autostart keys
+# that mean nothing now that manokwari-session execs manokwari itself
+# directly) plus 3 background PNGs and a .css.in that were never actually
+# loaded by any code (confirmed: the only Gtk.CssProvider in the whole
+# codebase is the one added for the clock widget in Fase 2 -- unrelated).
 subdir('files')
