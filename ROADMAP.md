@@ -16,6 +16,13 @@ bukan dihapus, supaya keputusan lama tetap terlihat alasannya.
 - **Lepas dari GNOME:** ganti dependensi yang GNOME-lock dengan implementasi generik/
   freedesktop-standard (UPower, systemd-logind, GDesktopAppInfo, dst) — bukan sekadar
   port dependensi versi baru.
+- **Window manager: Openbox, compositor: picom.** Menggantikan gnome-session+mutter
+  sepenuhnya (Milestone 3). Dipilih dari 3 kandidat (Marco, Xfwm4, Openbox) — lihat
+  riwayat diskusi untuk perbandingan pros/cons lengkap. Xfwm4 sebagai cadangan kalau
+  kombinasi ini ada kendala tak terduga.
+- **Frontend: native GTK3, bukan WebKit.** Opsi B dari 2 opsi WebKit yang dipertimbangkan
+  (A: port ke webkit2gtk-4.1, B: rewrite native). Alasan utama: footprint & beban
+  maintenance patch keamanan WebKit tidak sepadan untuk hobby project solo.
 - **Target OBS: openSUSE Tumbleweed dulu, satu-satunya prioritas saat ini.**
   openSUSE Leap, Debian, dan Fedora **sengaja ditunda**, bukan dibatalkan.
   Alasan Leap ditunda: Leap 16.0 (versi aktif saat ini — Leap 15.6 sudah EOL
@@ -76,32 +83,73 @@ bukan dihapus, supaya keputusan lama tetap terlihat alasannya.
   tapi anggap sebagai pekerjaan baru dari nol, bukan sesuatu yang tinggal
   diaktifkan begitu saja.
 
-### 🔜 Milestone 3 — Lepas Dependensi GNOME-Lock (Berikutnya)
-Sebagian pre-work sudah lewat di Milestone 1 (lihat catatan per item):
-- [x] ~~`gee-1.0` → `gee-0.8`~~ — **selesai** di Milestone 1
-- [ ] `unique-3.0` → `GApplication`/`GtkApplication` — dependency sudah dihapus,
-      **implementasi pengganti belum ada** (single-instance check di `main.vala`
-      masih di-guard/nonaktif)
-- [ ] `webkitgtk-3.0`/JSCore — dependency sudah dihapus, **keputusan Opsi A
-      (port ke webkit2gtk-4.1) vs Opsi B (rewrite native GTK) belum diambil**,
-      implementasi belum ada di 6+2 file yang di-stub
-- [ ] `gnome-settings-daemon` (kontrol brightness) → ganti `org.freedesktop.login1`
-      atau akses langsung `/sys/class/backlight` — **belum disentuh sama sekali**
-- [ ] `libgnome-menu-3.0` → `GDesktopAppInfo`/`GAppInfoMonitor` + parsing manual
-      `Categories=` — **belum disentuh**
-- [ ] `libwnck-3.0` — opsi pragmatis: pertahankan (masih tersedia luas), reimplementasi
-      EWMH manual via XCB jadi opsional/lanjutan
-- [ ] **Session manager + requirement `mutter`** (`files/sessions/blankon.session.in`,
-      `files/bin/blankon-session`) — paling dalam couplingnya, lihat `INVENTORY.md`
-      bagian 2. Perlu pilih window manager pengganti Mutter (kandidat: `marco`,
-      `openbox`, `xfwm4`) dan tulis ulang mekanisme peluncuran sesi
+### ✅ Milestone 3 — Lepas Dependensi GNOME-Lock (Selesai)
+Semua item selesai. Tidak ada satu pun paket berlabel GNOME tersisa di dependency Manokwari.
 
-### ⏳ Milestone 4 — Finalisasi Identitas & Branding (Belum mulai)
-- [ ] Rename D-Bus service name (`org.gnome.Panel` claim), GSettings schema ID
-- [ ] Rename `blankon.desktop` → `manokwari.desktop`, `blankon-session` →
-      `manokwari-session`, dsb (ditunda dari Milestone 0 karena isinya masih
-      fungsional bergantung gnome-session — baru masuk akal setelah Milestone 3)
-- [ ] Ikon/splash, keputusan kategori menu `Geo.BlankOn`
+- [x] ~~`gee-1.0` → `gee-0.8`~~ — selesai di Milestone 1
+- [x] `unique-3.0` → `GLib.Application` — `register()`/`get_is_remote()` lewat D-Bus,
+      app id sama (`io.github.cho2.Manokwari`)
+- [x] `gnome-settings-daemon` (brightness) → `org.freedesktop.login1.Session.SetBrightness`
+      + baca nilai langsung dari `/sys/class/backlight` (logind sengaja cuma sediakan
+      setter, pola sama seperti `brightnessctl`)
+- [x] `libgnome-menu-3.0` → `GLib.AppInfo`/`GLib.DesktopAppInfo` — tuntas sebagai bagian
+      dari rewrite menu native (lihat WebKit di bawah), bukan dikerjakan terpisah
+- [x] `libwnck-3.0` — dipertahankan sesuai keputusan pragmatis awal, tidak disentuh
+- [x] **WebKit/JSCore → native GTK penuh (Opsi B)**, dua fase:
+  - Fase 1 (menu): `menu.html` → `src/panel-menu-native.vala`. Header user
+    (`PanelUser`, sudah live sejak Milestone 1), search + app list
+    (`GLib.AppInfo`), Places (Home/folder XDG/mount via `VolumeMonitor`),
+    4 tombol sesi disambung langsung ke `PanelSessionManager` yang backend-nya
+    ternyata sudah hidup sejak awal (cuma dulu dipanggil dari JS)
+  - Fase 2 (desktop): `desktop.html` → `src/panel-desktop-native.vala`, cuma jam
+    (posisi kanan-bawah, format sama, locale-aware ke sistem — bukan hardcode
+    Indonesia). Semua yang lain (bookmark BlankOn, music player, widget cuaca
+    "Tekukur", grid 14 ikon settings) **didrop**, bukan ditunda
+  - Bonus: folder `system/` (jQuery, moment.js, aset widget cuaca) dikeluarkan
+    dari install — sudah 100% dead weight begitu kedua konsumen HTML diganti native
+- [x] **Session manager + requirement `mutter`** → diganti **Openbox + picom**
+      (lihat perbandingan kandidat WM di riwayat diskusi — Openbox dipilih karena
+      paket sudah tersedia di Tumbleweed, filosofi minimalis paling sesuai,
+      preseden kuat di LXQt; picom untuk compositing yang dibutuhkan widget jam)
+  - `files/sessions/` dihapus total, `files/bin/blankon-session` →
+    `manokwari-session` (`picom & manokwari & exec openbox`),
+    `files/xsessions/blankon.desktop` → `manokwari.desktop`
+    (`DesktopNames` GNOME dibuang, teks BlankOn dibersihkan — ini yang
+    ditunda dari Milestone 0)
+  - `panel-session-manager.vala`: `org.gnome.SessionManager` → `org.freedesktop.login1`
+    (reboot/shutdown/can_shutdown) + `openbox --exit` (logout, tidak ada
+    padanan logind untuk konsep "logout sesi GUI")
+  - `PanelShell` (penyamaran jadi `org.gnome.Shell`) dihapus; `PanelEndSessionDialog`
+    disimpan tidak terpakai — kandidat bagus untuk dialog konfirmasi lokal
+    sebelum logout/shutdown, belum disambung (lihat "Belum dikerjakan" di bawah)
+
+**Bonus fix di luar scope asli, ditemukan lewat testing end-to-end:**
+- `Utils.ungrab()` di `utils.vala` — null-device guard yang hilang (padahal
+  `grab()` pasangannya sudah punya), menyebabkan 3 `Gdk-CRITICAL` tiap menu
+  ditutup. Dikonfirmasi bug pre-existing lewat testing nyata di Tumbleweed,
+  bukan cuma sandbox — root cause ketemu, ditambal.
+
+**Known issue, sengaja tidak dikejar:** `Gtk-CRITICAL: gtk_widget_get_preferred_height`
+muncul konsisten di 3 kali run terpisah (sandbox, mesin nyata, run ulang) —
+polanya menunjuk ke area `PanelWindowHost`/Tray, bukan kode Fase 1/2 kita, tapi
+belum dibuktikan 100%. Non-fatal, tidak menghalangi apa pun. Selidiki lagi kalau
+mulai mengganggu.
+
+**Belum dikerjakan (bukan bug, follow-up kecil opsional):** sambungkan ulang
+`PanelEndSessionDialog` sebagai dialog konfirmasi ("yakin mau logout/shutdown?")
+sebelum tombol sesi di menu native benar-benar eksekusi aksinya.
+
+### ⏳ Milestone 4 — Finalisasi Identitas & Branding (Sebagian sudah selesai sebagai efek samping Milestone 3)
+- [x] ~~Rename D-Bus service name (`org.gnome.Panel` claim)~~ — dihapus total (bukan
+      di-rename, memang sudah tidak relevan tanpa gnome-session)
+- [x] ~~Rename `blankon.desktop` → `manokwari.desktop`, `blankon-session` →
+      `manokwari-session`~~ — selesai sebagai bagian dari rework session manager
+- [ ] GSettings schema ID — tidak ada schema milik sendiri untuk di-rename (Manokwari
+      cuma baca schema eksternal `org.gnome.system.locale`/`org.gnome.desktop.background`,
+      prioritas rendah, lihat `INVENTORY.md` bagian 4)
+- [ ] Ikon/splash
+- [ ] Keputusan kategori menu `Geo.BlankOn` di `manokwari-applications.menu`
+      (branded BlankOn, konten bukan teknis — perlu keputusan terpisah)
 
 ### ⏳ Milestone 5 — Uji Lintas-Distro & Stabilisasi (Belum mulai)
 - [ ] Perluas target OBS: openSUSE Leap (setelah solusi vala/gtk3-nya jelas),
