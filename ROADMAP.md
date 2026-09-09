@@ -139,19 +139,41 @@ mulai mengganggu.
 `PanelEndSessionDialog` sebagai dialog konfirmasi ("yakin mau logout/shutdown?")
 sebelum tombol sesi di menu native benar-benar eksekusi aksinya.
 
-### ⏳ Milestone 4 — Finalisasi Identitas & Branding (Sebagian sudah selesai sebagai efek samping Milestone 3)
+### ✅ Milestone 4 — Finalisasi Identitas & Branding (Selesai)
 - [x] ~~Rename D-Bus service name (`org.gnome.Panel` claim)~~ — dihapus total (bukan
       di-rename, memang sudah tidak relevan tanpa gnome-session)
 - [x] ~~Rename `blankon.desktop` → `manokwari.desktop`, `blankon-session` →
       `manokwari-session`~~ — selesai sebagai bagian dari rework session manager
-- [ ] GSettings schema ID — tidak ada schema milik sendiri untuk di-rename (Manokwari
-      cuma baca schema eksternal `org.gnome.system.locale`/`org.gnome.desktop.background`,
-      prioritas rendah, lihat `INVENTORY.md` bagian 4)
-- [ ] Ikon/splash
-- [ ] Keputusan kategori menu `Geo.BlankOn` di `manokwari-applications.menu`
-      (branded BlankOn, konten bukan teknis — perlu keputusan terpisah)
+- [x] GSettings schema ID — tidak ada schema milik sendiri untuk di-rename, tidak
+      ada tindakan yang diperlukan (lihat `INVENTORY.md` bagian 4)
+- [x] Icon — dipertahankan `distributor-logo` (sudah generik/freedesktop-standard,
+      bukan branded BlankOn — resolve otomatis ke logo distro apa pun yang jalan).
+      Tidak ada icon custom baru.
+- [x] Cleanup aset mati yang ditemukan lewat audit: `data/manokwari.desktop.in`
+      (`NoDisplay=true`, satu-satunya fungsinya key autostart gnome-session yang
+      sudah tidak relevan), 3 PNG (`bg.png`, `entry-bg.png`, `entry-hover-bg.png`),
+      dan `manokwari.css.in` (ternyata tidak pernah di-load kode manapun, dari
+      sebelum kerja kita mulai) — semua dihapus, folder `data/` ikut hilang
+- [x] Keputusan kategori menu `Geo.BlankOn` (+ submenu `Debian`) — **`manokwari-applications.menu`
+      berhenti diinstal sama sekali** (bukan cuma bersihkan 2 kategori itu), karena
+      ternyata sudah tidak dikonsumsi kode apa pun sejak menu native Fase 1 pakai
+      `GLib.AppInfo` langsung. File tetap ada di repo sebagai referensi, tidak dihapus.
+- [x] **Revisit bevel/sidebar desktop** (setelah sempat cuma disisakan jam di
+      Milestone 3 Fase 2): **dihapus total**, termasuk jamnya. Alasan: taskbar
+      (`PanelClock`, pre-existing, tidak ada hubungan dengan kerja WebKit-rewrite
+      kita) sudah punya jam sendiri dengan format sama — jam di bevel genuinely
+      duplikat, bukan cuma opsional. `PanelDesktopHTML`/`panel-desktop-native.vala`
+      dihapus sepenuhnya; peran lain `PanelDesktop` (window transparan penangkap
+      klik untuk auto-tutup menu) dipindah ke window itu sendiri, tetap berfungsi.
+- [x] **Keputusan: widget cuaca tidak dibawa kembali.** Kode HTML/JS aslinya sudah
+      mati (`system/` tidak lagi di-install) — "mengembalikan" berarti tulis ulang
+      dari nol (HTTP client, parsing JSON, UI kota/prakiraan) melawan API yang
+      statusnya tidak diketahui, skala sebanding Fase 1 menu, untuk fitur yang
+      bukan inti desktop shell dan menambah titik gagal (dependency layanan
+      eksternal) di komponen panel. Tetap terbuka sebagai fitur baru yang
+      disengaja di masa depan, bukan "revival".
 
-### ⏳ Milestone 5 — Uji Lintas-Distro & Stabilisasi (Belum mulai)
+### 🔜 Milestone 5 — Uji Lintas-Distro & Stabilisasi (Berikutnya)
 - [ ] Perluas target OBS: openSUSE Leap (setelah solusi vala/gtk3-nya jelas),
       Debian, Fedora — sesuai urutan prioritas rendah yang disepakati
 
