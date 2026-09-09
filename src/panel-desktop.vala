@@ -1,9 +1,16 @@
 using Gtk;
 using Cairo;
 
+// Milestone 4 (revisit): the desktop bevel/sidebar is removed outright, not
+// just emptied. Its clock was genuinely redundant -- the taskbar already
+// has its own (PanelClock, src/panel-clock.vala, pre-existing and
+// unrelated to any of our Milestone 3 work). PanelDesktop's OTHER role --
+// a full-screen transparent window that catches clicks on the desktop to
+// auto-close the menu (desktop_clicked signal) -- is unrelated to the
+// bevel content and stays exactly as it was, just moved from the now-gone
+// child widget onto the window itself.
 
 public class PanelDesktop: PanelAbstractWindow {
-    PanelDesktopHTML desktop;
 
     public signal void desktop_clicked();
 
@@ -18,18 +25,14 @@ public class PanelDesktop: PanelAbstractWindow {
         override_background_color(StateFlags.NORMAL, c);
         set_app_paintable(true);
 
-        desktop = new PanelDesktopHTML ();
-        desktop.show ();
-
         set_type_hint (Gdk.WindowTypeHint.DESKTOP);
-        
-        add (desktop);
+
         queue_resize ();
 
         move (0, 0);
         show_all ();
-    
-        desktop.button_press_event.connect (() => {
+
+        button_press_event.connect (() => {
             desktop_clicked ();
             return false;
         });
@@ -58,7 +61,6 @@ public class PanelDesktop: PanelAbstractWindow {
         PanelScreen.move_window (this, Gdk.Gravity.NORTH_EAST);
 
         queue_resize ();
-        desktop.updateSize();
         stderr.printf("iii %d %d <--\n", screen.width(), screen.height());
     }
 
