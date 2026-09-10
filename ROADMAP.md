@@ -174,8 +174,25 @@ sebelum tombol sesi di menu native benar-benar eksekusi aksinya.
       disengaja di masa depan, bukan "revival".
 
 ### 🔜 Milestone 5 — Uji Lintas-Distro & Stabilisasi (Berikutnya)
-- [ ] Perluas target OBS: openSUSE Leap (setelah solusi vala/gtk3-nya jelas),
-      Debian, Fedora — sesuai urutan prioritas rendah yang disepakati
+Skup direvisi (sebelumnya "Leap dulu setelah Tumbleweed, Debian/Fedora belakangan"):
+
+- [ ] **openSUSE Tumbleweed — prioritas tinggi.** Sudah build sukses di OBS
+      (Milestone 2), tapi belum ada uji fungsional end-to-end pakai session
+      Openbox+picom yang baru (Milestone 3) di mesin nyata — bukan cuma compile.
+- [ ] **Debian 13 — prioritas sedang.** Target baru, belum pernah disentuh sama
+      sekali. Perlu audit paket dari nol (nama paket Debian beda konvensi dari
+      openSUSE — expect drama serupa Milestone 1-2, tapi across-the-board
+      lebih established karena Debian jauh lebih tua/besar).
+- [ ] **openSUSE Leap — prioritas rendah, perlu revisit paket-paketnya.**
+      Dicek ulang (9 Sept 2026): `vala` masih belum ada paket resmi bahkan di
+      **Leap 16.1** yang baru rilis (bukan cuma 16.0 lagi) — situasi belum
+      berubah dari temuan awal Milestone 1. Tool
+      [osdiff](https://opensuse.github.io/osdiff/) (dari @cho2) berguna untuk
+      audit versi paket yang **sudah ada** di kedua sisi Tumbleweed/Leap, tapi
+      tidak menjawab soal paket yang hilang total seperti vala/gtk3 — itu tetap
+      perlu dicek manual satu-satu lewat software.opensuse.org. Audit penuh
+      ditunda sampai giliran Leap tiba (prioritas rendah).
+- [x] ~~Fedora~~ — **di-drop dari scope**, bukan ditunda.
 
 ### ⏳ Milestone 6 — Rilis & Maintenance (Belum mulai)
 
