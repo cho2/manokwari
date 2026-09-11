@@ -208,7 +208,18 @@ public class PanelMenuHTML : Gtk.Box {
         restart_btn.set_relief (Gtk.ReliefStyle.NONE);
         restart_btn.set_image (new Gtk.Image.from_icon_name ("system-reboot", Gtk.IconSize.LARGE_TOOLBAR));
         restart_btn.set_tooltip_text (_("Restart"));
-        restart_btn.clicked.connect (() => { PanelSessionManager.getInstance ().reboot.begin (); });
+        restart_btn.clicked.connect (() => {
+            // Milestone 5 Tahap 1: confirm before acting, using
+            // PanelEndSessionDialog (kept unused since Milestone 3 for
+            // exactly this). type=2 is restart; the dialog also
+            // auto-confirms itself after a 10s countdown if not canceled,
+            // matching the original gnome-session behavior.
+            var dialog = new PanelEndSessionDialog ();
+            dialog.confirmed_reboot.connect (() => {
+                PanelSessionManager.getInstance ().reboot.begin ();
+            });
+            dialog.open.begin (2, 0, 0, {});
+        });
         box.pack_start (restart_btn, false, false, 0);
 
         if (PanelSessionManager.getInstance ().can_shutdown ()) {
@@ -216,7 +227,14 @@ public class PanelMenuHTML : Gtk.Box {
             shutdown_btn.set_relief (Gtk.ReliefStyle.NONE);
             shutdown_btn.set_image (new Gtk.Image.from_icon_name ("system-shutdown", Gtk.IconSize.LARGE_TOOLBAR));
             shutdown_btn.set_tooltip_text (_("Shutdown"));
-            shutdown_btn.clicked.connect (() => { PanelSessionManager.getInstance ().shutdown.begin (); });
+            shutdown_btn.clicked.connect (() => {
+                // type=1 is shutdown -- same dialog/countdown pattern as restart.
+                var dialog = new PanelEndSessionDialog ();
+                dialog.confirmed_shutdown.connect (() => {
+                    PanelSessionManager.getInstance ().shutdown.begin ();
+                });
+                dialog.open.begin (1, 0, 0, {});
+            });
             box.pack_start (shutdown_btn, false, false, 0);
         }
 

@@ -615,7 +615,15 @@ public class PanelWindowHost : PanelAbstractWindow {
           handleKey(key);
         });
         
-        logo = new Image.from_icon_name("distributor-logo", IconSize.LARGE_TOOLBAR);
+        // Milestone 5 Tahap 1: distributor-logo is provided by each distro's
+        // own icon-theme/branding package (e.g. openSUSE's own logo package) --
+        // a genuinely minimal install may not have any icon theme that
+        // provides it at all. Fall back to a name that's part of the
+        // freedesktop icon naming spec itself, so it resolves even without
+        // any distro-specific branding installed.
+        var icon_theme = IconTheme.get_default ();
+        string logo_icon_name = icon_theme.has_icon ("distributor-logo") ? "distributor-logo" : "start-here";
+        logo = new Image.from_icon_name(logo_icon_name, IconSize.LARGE_TOOLBAR);
         var event_box = new EventBox();
         event_box.add (logo);
         event_box.show_all ();
