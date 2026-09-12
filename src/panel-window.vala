@@ -615,15 +615,67 @@ public class PanelWindowHost : PanelAbstractWindow {
           handleKey(key);
         });
         
-        // Milestone 5 Tahap 1: distributor-logo is provided by each distro's
-        // own icon-theme/branding package (e.g. openSUSE's own logo package) --
-        // a genuinely minimal install may not have any icon theme that
-        // provides it at all. Fall back to a name that's part of the
-        // freedesktop icon naming spec itself, so it resolves even without
-        // any distro-specific branding installed.
+        // Milestone 5 Tahap 1/2: distributor-logo is provided by each distro's
+        // own branding package under a DIFFERENT convention per distro --
+        // there's no single universal answer here, so this tries a short
+        // list of known candidates in order rather than hardcoding one.
+        //
+        // Confirmed on real openSUSE Tumbleweed hardware (Tahap 1 testing):
+        // "distributor-logo" does NOT resolve via icon-theme lookup at all
+        // on a from-source install (no branding package pulled in as a
+        // dependency). The actual current distro logo lives at a fixed file
+        // path instead: /usr/share/pixmaps/distribution-logos/square-hicolor.svg
+        // (same filename for both Leap and Tumbleweed, but the image content
+        // differs per distro/variant -- that's *why* it's a fixed path
+        // rather than something themeable via icon name).
+        //
+        // Debian not yet tested (Milestone 5 status) -- its branding
+        // package (desktop-base) uses a different path convention entirely
+        // (/usr/share/images/desktop-base/), and an old (2011-era, GConf)
+        // reference suggests an icon-theme name of "debian-swirl", but
+        // that's unconfirmed for trixie. Included as a candidate below
+        // since it's a free, harmless check either way -- update this list
+        // once actually verified rather than trusting that guess.
+        Gtk.Image? logo_image = null;
         var icon_theme = IconTheme.get_default ();
-        string logo_icon_name = icon_theme.has_icon ("distributor-logo") ? "distributor-logo" : "start-here";
-        logo = new Image.from_icon_name(logo_icon_name, IconSize.LARGE_TOOLBAR);
+
+        string[] candidate_icon_names = { "distributor-logo", "debian-swirl" };
+        foreach (var name in candidate_icon_names) {
+            if (icon_theme.has_icon (name)) {
+                logo_image = new Image.from_icon_name (name, IconSize.LARGE_TOOLBAR);
+                break;
+            }
+        }
+
+        if (logo_image == null) {
+            string[] candidate_files = {
+                "/usr/share/pixmaps/distribution-logos/square-hicolor.svg",
+            };
+            foreach (var path in candidate_files) {
+                if (FileUtils.test (path, FileTest.EXISTS)) {
+                    try {
+                        // set_pixel_size() below only affects icon-name/gicon-
+                        // based images, not file-loaded ones -- rasterize the
+                        // SVG at the right size directly instead, or it could
+                        // render at whatever the file's default size is.
+                        var pixbuf = new Gdk.Pixbuf.from_file_at_size (path, height, height);
+                        logo_image = new Image.from_pixbuf (pixbuf);
+                    } catch (Error e) {
+                        stderr.printf ("Unable to load logo from %s: %s\n", path, e.message);
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Universal last resort: part of the freedesktop icon naming spec
+        // itself, not any specific distro's branding, so it resolves
+        // regardless of what's installed.
+        if (logo_image == null) {
+            logo_image = new Image.from_icon_name ("start-here", IconSize.LARGE_TOOLBAR);
+        }
+
+        logo = logo_image;
         var event_box = new EventBox();
         event_box.add (logo);
         event_box.show_all ();
