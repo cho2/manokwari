@@ -25,30 +25,21 @@ public class PanelDesktop: PanelAbstractWindow {
         override_background_color(StateFlags.NORMAL, c);
         set_app_paintable(true);
 
-        // Milestone 5 Tahap 2 follow-up: was set_type_hint(Gdk.WindowTypeHint.DESKTOP).
-        // Real-world testing found this conflicts with nitrogen (the
-        // wallpaper tool added earlier in this same Tahap): nitrogen scans
-        // for a window of exactly this X11 type to figure out how to draw
-        // the background, found ours instead (WM_CLASS "Manokwari", which
-        // it doesn't recognize as one of the desktop-icon managers it has
-        // special handling for -- Nautilus, PCManFM, Nemo, etc.), and
-        // failed with "UNKNOWN ROOT WINDOW TYPE DETECTED (Manokwari)"
-        // (confirmed against nitrogen's own source, src/SetBG.cc, and
-        // several near-identical upstream bug reports from other unrelated
-        // programs that make the same mistake -- Easystroke, Tilda,
-        // AwesomeWM -- of claiming the DESKTOP type for unrelated reasons).
-        //
-        // Replaced with the same practical behavior (undecorated, no
-        // focus, always below other windows) via different, more specific
-        // hints instead of the single DESKTOP type that bundles all of
-        // that together *and* signals "I am the desktop" to anything
-        // scanning for it. NOT yet live-tested against a real Openbox
-        // session -- please confirm this both fixes nitrogen AND still
-        // keeps click-catching/stacking behaving the same as before.
-        set_type_hint (Gdk.WindowTypeHint.NORMAL);
-        set_decorated (false);
-        set_accept_focus (false);
-        set_keep_below (true);
+        // REVERTED (Milestone 5 Tahap 2): the previous commit swapped this
+        // for set_keep_below(true)/set_decorated(false)/set_accept_focus(false)
+        // to stop nitrogen misidentifying this window -- but that caused a
+        // full black-screen regression on real hardware (entire screen
+        // black, only cursor visible), almost certainly because picom
+        // treats DESKTOP-type windows specially for RGBA compositing, and
+        // a NORMAL-type window with the same alpha=0 background doesn't
+        // get the same treatment. A cosmetic nitrogen warning + wallpaper
+        // not showing is a strictly better failure mode than an unusable
+        // black screen -- reverted rather than iterate further on window
+        // hints blind. Real fix for the nitrogen conflict now needs a
+        // different approach that doesn't touch this hint at all (e.g.
+        // painting the wallpaper directly into this already-controlled
+        // window instead of relying on nitrogen to find/draw onto it).
+        set_type_hint (Gdk.WindowTypeHint.DESKTOP);
 
         queue_resize ();
 
