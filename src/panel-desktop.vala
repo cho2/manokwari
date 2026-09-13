@@ -25,7 +25,30 @@ public class PanelDesktop: PanelAbstractWindow {
         override_background_color(StateFlags.NORMAL, c);
         set_app_paintable(true);
 
-        set_type_hint (Gdk.WindowTypeHint.DESKTOP);
+        // Milestone 5 Tahap 2 follow-up: was set_type_hint(Gdk.WindowTypeHint.DESKTOP).
+        // Real-world testing found this conflicts with nitrogen (the
+        // wallpaper tool added earlier in this same Tahap): nitrogen scans
+        // for a window of exactly this X11 type to figure out how to draw
+        // the background, found ours instead (WM_CLASS "Manokwari", which
+        // it doesn't recognize as one of the desktop-icon managers it has
+        // special handling for -- Nautilus, PCManFM, Nemo, etc.), and
+        // failed with "UNKNOWN ROOT WINDOW TYPE DETECTED (Manokwari)"
+        // (confirmed against nitrogen's own source, src/SetBG.cc, and
+        // several near-identical upstream bug reports from other unrelated
+        // programs that make the same mistake -- Easystroke, Tilda,
+        // AwesomeWM -- of claiming the DESKTOP type for unrelated reasons).
+        //
+        // Replaced with the same practical behavior (undecorated, no
+        // focus, always below other windows) via different, more specific
+        // hints instead of the single DESKTOP type that bundles all of
+        // that together *and* signals "I am the desktop" to anything
+        // scanning for it. NOT yet live-tested against a real Openbox
+        // session -- please confirm this both fixes nitrogen AND still
+        // keeps click-catching/stacking behaving the same as before.
+        set_type_hint (Gdk.WindowTypeHint.NORMAL);
+        set_decorated (false);
+        set_accept_focus (false);
+        set_keep_below (true);
 
         queue_resize ();
 
