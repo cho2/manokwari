@@ -14,6 +14,60 @@ public class PanelDesktop: PanelAbstractWindow {
 
     public signal void desktop_clicked();
 
+    // Milestone 5 Tahap 2 (2nd attempt, after the window-hint approach
+    // caused a black-screen regression): draw the wallpaper ourselves,
+    // directly into this already-working, already-tested window, instead
+    // of asking nitrogen to find and paint onto/around it -- nitrogen's
+    // own root-window-scanning mechanism is exactly what conflicted with
+    // our DESKTOP-type window in the first place. nitrogen is still used
+    // as the picker (run it manually to choose a wallpaper -- see
+    // TESTING.md); we just read ITS saved config ourselves afterward
+    // rather than relying on "nitrogen --restore" to paint it.
+    //
+    // Deliberately simple for a first pass, to keep this safe after the
+    // last regression: reads only the first "file=" line found (ignores
+    // nitrogen's per-monitor sections -- one wallpaper across all screens),
+    // always stretches to fill (no aspect-ratio-preserving crop yet), and
+    // is loaded once at startup (won't pick up a wallpaper changed via
+    // nitrogen while Manokwari is already running -- needs a fresh login).
+    private Gdk.Pixbuf? wallpaper_pixbuf = null;
+
+    string? find_wallpaper_path () {
+        var config_path = GLib.Path.build_filename (
+            Environment.get_home_dir (), ".config", "nitrogen", "bg-saved.cfg");
+        if (!FileUtils.test (config_path, FileTest.EXISTS)) {
+            return null;
+        }
+        try {
+            string contents;
+            FileUtils.get_contents (config_path, out contents);
+            foreach (var line in contents.split ("\n")) {
+                var trimmed = line.strip ();
+                if (trimmed.has_prefix ("file=")) {
+                    return trimmed.substring (5).strip ();
+                }
+            }
+        } catch (FileError e) {
+            stderr.printf ("Unable to read nitrogen config: %s\n", e.message);
+        }
+        return null;
+    }
+
+    void load_wallpaper () {
+        var path = find_wallpaper_path ();
+        if (path == null || !FileUtils.test (path, FileTest.EXISTS)) {
+            wallpaper_pixbuf = null;
+            return;
+        }
+        try {
+            var geo = PanelScreen.get_primary_monitor_geometry ();
+            wallpaper_pixbuf = new Gdk.Pixbuf.from_file_at_scale (path, geo.width, geo.height, false);
+        } catch (Error e) {
+            stderr.printf ("Unable to load wallpaper %s: %s\n", path, e.message);
+            wallpaper_pixbuf = null;
+        }
+    }
+
     public PanelDesktop() {
         set_visual (this.screen.get_rgba_visual ());
 
@@ -40,6 +94,19 @@ public class PanelDesktop: PanelAbstractWindow {
         // painting the wallpaper directly into this already-controlled
         // window instead of relying on nitrogen to find/draw onto it).
         set_type_hint (Gdk.WindowTypeHint.DESKTOP);
+
+        load_wallpaper ();
+        draw.connect ((cr) => {
+            if (wallpaper_pixbuf == null) {
+                // No wallpaper found/loaded -- do nothing at all, same as
+                // before this change existed. The alpha=0 background set
+                // above is what shows through.
+                return false;
+            }
+            Gdk.cairo_set_source_pixbuf (cr, wallpaper_pixbuf, 0, 0);
+            cr.paint ();
+            return true;
+        });
 
         queue_resize ();
 
