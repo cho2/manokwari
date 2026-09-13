@@ -3,16 +3,27 @@
 #
 # Milestone 3: no more gnome-session, no more mutter. Manokwari pairs with
 # Openbox as its window manager (EWMH-compliant, so the libwnck-based
-# taskbar works correctly) plus picom for compositing (PanelDesktop's clock
-# widget uses an RGBA transparent window, which needs a compositor to
-# render correctly rather than showing solid black).
+# taskbar works correctly) plus picom for compositing. (Note: the specific
+# RGBA-transparent clock widget that originally motivated needing a
+# compositor was removed entirely in Milestone 4's bevel/sidebar revisit --
+# picom is kept regardless, since removing it risks other transparency use
+# elsewhere rendering as solid black instead of failing more gracefully.)
 #
-# picom and manokwari are started directly here rather than through
-# Openbox's own autostart.sh mechanism -- deliberately, to avoid owning/
-# conflicting with a system file the openbox package might also ship.
-# Openbox itself is exec'd last and becomes this session's foreground
-# process: the session ends when Openbox exits, including via the Logout
-# button in Manokwari's own menu (which runs "openbox --exit" --
+# Milestone 5 Tahap 2: added light-locker (actually locks the screen when
+# Manokwari's Lock button calls org.freedesktop.login1.Session.Lock() --
+# see Utils.lock_screen() in src/utils.vala; needs LightDM as the display
+# manager, which is already what TESTING.md recommends) and
+# "nitrogen --restore" (reapplies whatever wallpaper was last set via
+# nitrogen -- note this does nothing on a first-ever run until the user
+# has actually picked a wallpaper with nitrogen once; it does not ship a
+# default image of its own).
+#
+# picom/light-locker/nitrogen/manokwari are started directly here rather
+# than through Openbox's own autostart.sh mechanism -- deliberately, to
+# avoid owning/conflicting with a system file the openbox package might
+# also ship. Openbox itself is exec'd last and becomes this session's
+# foreground process: the session ends when Openbox exits, including via
+# the Logout button in Manokwari's own menu (which runs "openbox --exit" --
 # see PanelSessionManager.logout() in src/panel-session-manager.vala).
 
 L=`dbus-send --system --print-reply --type=method_call --dest=org.freedesktop.Accounts /org/freedesktop/Accounts/User1000 org.freedesktop.DBus.Properties.Get string:'org.freedesktop.Accounts.User' string:'Language' 2>/dev/null|tail -1|awk '{print $3}'|sed -e s/\"//g`

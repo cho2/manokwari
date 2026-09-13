@@ -29,6 +29,10 @@ BuildRequires:  pkgconfig(x11)
 # See files/bin/manokwari-session.
 Requires:       openbox
 Requires:       picom
+# Milestone 5 Tahap 2: light-locker actually locks the screen (needs LightDM
+# as the display manager); nitrogen reapplies/lets the user set a wallpaper.
+Requires:       light-locker
+Requires:       nitrogen
 
 %description
 Manokwari (Reborn) is an independent fork of the BlankOn Manokwari desktop

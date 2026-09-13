@@ -22,4 +22,12 @@ interface Login1Manager : GLib.Object {
 interface Login1Session : GLib.Object {
     [DBus (name = "SetBrightness")]
     public abstract void set_brightness (string subsystem, string name, uint32 brightness) throws DBusError, IOError;
+
+    // Added for Milestone 5 Tahap 2 (Lock button fix). Calling this makes
+    // logind emit its Lock signal on this session -- light-locker (a new
+    // runtime dependency, see files/bin/manokwari-session) listens for
+    // that signal and does the actual locking/unlocking, coordinating
+    // with LightDM. Does nothing by itself without a locker daemon running.
+    [DBus (name = "Lock")]
+    public abstract void lock () throws DBusError, IOError;    
 }

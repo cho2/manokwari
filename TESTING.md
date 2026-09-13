@@ -129,6 +129,12 @@ Run through this once logged in:
 - [ ] Escape with empty search -> menu closes
 - [ ] Print Screen key -> `Utils.print_screen()` fires (still wired to
       `PanelDesktop`'s `key_press_event` even after the bevel/sidebar removal)
+- [ ] **Wallpaper** (Milestone 5 Tahap 2 fix): a genuinely fresh install
+      will still show black -- `nitrogen --restore` (run automatically by
+      `manokwari-session`) only *reapplies* a previously-chosen wallpaper,
+      it doesn't ship a default image. Run `nitrogen` once yourself, pick
+      any image, and confirm it's still set after logging out and back in
+      (that persistence across sessions is the actual thing being tested).      
 - [ ] **Worth specifically observing:** now that the bevel/clock (the one
       thing using RGBA transparency) is gone entirely, does the panel itself
       show any visible transparency/gradient anywhere? The CSS that would've
@@ -139,18 +145,22 @@ Run through this once logged in:
       noting either way, not something to "fix" during this test.
 
 ### Test session buttons carefully
-- **Lock**: safe to try, worst case is a stuck lock screen you can't get
-  out of (reachable by switching VT or via another user's SSH session) --
-  and it's likely to just do nothing anyway, since `Utils.lock_screen()`
-  still shells out to `gnome-screensaver-command`, which almost certainly
-  isn't installed in this minimal setup. Confirms a known limitation
-  rather than a new bug if so.
+- **Lock**: as of Milestone 5 Tahap 2, this now goes through
+  `org.freedesktop.login1.Session.Lock()` + `light-locker` (was previously
+  `gnome-screensaver-command`, which didn't exist in this session at all --
+  confirmed non-functional in the first Tumbleweed test). Should actually
+  lock the screen now. Safe to try -- worst case is a stuck lock screen you
+  can't get out of, reachable by switching VT or via another user's SSH
+  session.
+- **Restart / Shutdown**: as of Tahap 1, these now show a confirmation
+  dialog first (`PanelEndSessionDialog`, with its own 10s auto-confirm
+  countdown if you don't cancel) rather than acting immediately. Once
+  confirmed, they genuinely restart/shut down the machine via
+  `org.freedesktop.login1`. Test these last, and only when you're actually
+  ready for the machine to restart/power off.
 - **Logout**: should run `openbox --exit`, ending the whole session and
   dropping you back at the LightDM login screen. Safe, reversible -- just
   log back in.
-- **Restart / Shutdown**: genuinely restarts/shuts down the machine via
-  `org.freedesktop.login1`. Test these last, and only when you're actually
-  ready for the machine to restart/power off.
 
 ## 4. Reporting back
 

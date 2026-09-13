@@ -24,10 +24,23 @@ namespace Utils {
     }
 
     public bool lock_screen () {
+        // Milestone 5 Tahap 2: gnome-screensaver-command replaced with
+        // org.freedesktop.login1.Session.Lock() -- same GetSessionByPID
+        // pattern already used for brightness (panel-window.vala) and
+        // reboot/shutdown (panel-session-manager.vala). Lock() itself just
+        // asks logind to emit its Lock signal; light-locker (new runtime
+        // dependency, started in files/bin/manokwari-session) is what
+        // actually listens for that and locks the screen.
         try {
-            GLib.Process.spawn_command_line_async ("gnome-screensaver-command -l");
+            Login1Manager manager = Bus.get_proxy_sync (BusType.SYSTEM,
+                "org.freedesktop.login1", "/org/freedesktop/login1");
+            var session_path = manager.get_session_by_pid ((uint32) Posix.getpid ());
+            Login1Session session = Bus.get_proxy_sync (BusType.SYSTEM,
+                "org.freedesktop.login1", session_path);
+            session.lock ();
             return true;
         } catch (Error e) {
+            stderr.printf ("Unable to lock session: %s\n", e.message);
             return false;
         }
     }

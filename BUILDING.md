@@ -14,7 +14,7 @@ always follow the pattern you'd expect from Debian/Ubuntu/Fedora.
 ```bash
 sudo zypper install vala meson ninja git gcc intltool gettext-tools \
     glib2-devel gtk3-devel at-spi2-core-devel libgee-devel cairo-devel \
-    libwnck-devel libnotify-devel libX11-devel openbox picom
+    libwnck-devel libnotify-devel libX11-devel openbox picom light-locker nitrogen
 ```
 
 | pkg-config module (from `meson.build`) | RPM package |
@@ -55,7 +55,7 @@ stack, as a sanity check. First actual build attempt is Milestone 5.
 ```bash
 sudo apt install valac meson ninja-build git gcc intltool gettext \
     libglib2.0-dev libgtk-3-dev libatk1.0-dev libgee-0.8-dev libcairo2-dev \
-    libwnck-3-dev libnotify-dev libx11-dev openbox picom
+    libwnck-3-dev libnotify-dev libx11-dev openbox picom light-locker nitrogen
 ```
 
 | pkg-config module (from `meson.build`) | Debian package |
