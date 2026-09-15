@@ -47,5 +47,7 @@ fi
 export LANG LC_ALL
 
 picom &
+light-locker &
+nitrogen --restore &
 manokwari &
 exec openbox
