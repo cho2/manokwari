@@ -22,15 +22,24 @@ public class PanelDesktop: PanelAbstractWindow {
     // our DESKTOP-type window in the first place. nitrogen is still used
     // as the picker (run it manually to choose a wallpaper -- see
     // TESTING.md); we just read ITS saved config ourselves afterward
-    // rather than relying on "nitrogen --restore" to paint it.
+    // rather than relying on "nitrogen --restore" to paint it. Note
+    // nitrogen still attempts (and fails, same conflict) its own paint
+    // whenever you apply a NEW image from its GUI -- harmless now since
+    // we don't depend on it succeeding, but the warning will still appear
+    // in nitrogen's own log at that moment. Not something we can suppress
+    // from our side.
     //
-    // Deliberately simple for a first pass, to keep this safe after the
-    // last regression: reads only the first "file=" line found (ignores
-    // nitrogen's per-monitor sections -- one wallpaper across all screens),
-    // always stretches to fill (no aspect-ratio-preserving crop yet), and
-    // is loaded once at startup (won't pick up a wallpaper changed via
-    // nitrogen while Manokwari is already running -- needs a fresh login).
+    // Reads only the first "file=" line found (ignores nitrogen's
+    // per-monitor sections -- one wallpaper across all screens). Uses a
+    // "cover" (aspect-preserving, crop-to-fill) scale rather than
+    // replicating nitrogen's full mode system (Automatic/Centered/Tiled/
+    // Scaled/Zoomed/Zoomed Fill) -- one reasonable default, not a faithful
+    // reproduction of whatever mode nitrogen's config says. A FileMonitor
+    // watches nitrogen's config file, so changing wallpaper via nitrogen's
+    // GUI while Manokwari is running updates it live -- no need to log
+    // out/in anymore.
     private Gdk.Pixbuf? wallpaper_pixbuf = null;
+    private FileMonitor? wallpaper_monitor = null;
 
     string? find_wallpaper_path () {
         var config_path = GLib.Path.build_filename (
@@ -61,10 +70,41 @@ public class PanelDesktop: PanelAbstractWindow {
         }
         try {
             var geo = PanelScreen.get_primary_monitor_geometry ();
-            wallpaper_pixbuf = new Gdk.Pixbuf.from_file_at_scale (path, geo.width, geo.height, false);
+            // Load at native size first to compute a "cover" (crop-to-fill)
+            // scale factor -- looks much better than stretching for images
+            // that don't exactly match the screen's aspect ratio.
+            var original = new Gdk.Pixbuf.from_file (path);
+            double scale = double.max (
+                (double) geo.width / original.get_width (),
+                (double) geo.height / original.get_height ());
+            int scaled_width = (int) (original.get_width () * scale) + 1;
+            int scaled_height = (int) (original.get_height () * scale) + 1;
+            var scaled = original.scale_simple (scaled_width, scaled_height, Gdk.InterpType.BILINEAR);
+            int offset_x = (scaled_width - geo.width) / 2;
+            int offset_y = (scaled_height - geo.height) / 2;
+            wallpaper_pixbuf = new Gdk.Pixbuf.subpixbuf (scaled, offset_x, offset_y, geo.width, geo.height);
         } catch (Error e) {
             stderr.printf ("Unable to load wallpaper %s: %s\n", path, e.message);
             wallpaper_pixbuf = null;
+        }
+    }
+
+    void setup_wallpaper_monitor () {
+        var config_path = GLib.Path.build_filename (
+            Environment.get_home_dir (), ".config", "nitrogen", "bg-saved.cfg");
+        try {
+            var file = File.new_for_path (config_path);
+            wallpaper_monitor = file.monitor_file (FileMonitorFlags.NONE, null);
+            wallpaper_monitor.changed.connect ((src, dest, event) => {
+                load_wallpaper ();
+                queue_draw ();
+            });
+        } catch (Error e) {
+            // Non-fatal -- e.g. ~/.config/nitrogen/ not existing yet because
+            // nitrogen has genuinely never been run. Wallpaper changes just
+            // won't be picked up live until next login in that case, same
+            // as the previous (pre-FileMonitor) behavior for everyone.
+            stderr.printf ("Unable to watch nitrogen config for changes: %s\n", e.message);
         }
     }
 
@@ -96,6 +136,7 @@ public class PanelDesktop: PanelAbstractWindow {
         set_type_hint (Gdk.WindowTypeHint.DESKTOP);
 
         load_wallpaper ();
+        setup_wallpaper_monitor ();
         draw.connect ((cr) => {
             if (wallpaper_pixbuf == null) {
                 // No wallpaper found/loaded -- do nothing at all, same as
