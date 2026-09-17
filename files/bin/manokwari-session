@@ -18,6 +18,15 @@
 # has actually picked a wallpaper with nitrogen once; it does not ship a
 # default image of its own).
 #
+# --no-late-locking: light-locker's default ("late locking") only shows
+# the actual password prompt when the screensaver later *deactivates*
+# (e.g. on the next mouse/key input), not immediately when Lock fires --
+# a well-documented light-locker quirk (several unrelated bug reports
+# describe the same few-second delay), not something specific to us.
+# Confirmed on real hardware: without this flag, pressing Lock grabs
+# input right away but the prompt only appears several seconds later,
+# easy to mistake for the button not working at all.
+#
 # picom/light-locker/nitrogen/manokwari are started directly here rather
 # than through Openbox's own autostart.sh mechanism -- deliberately, to
 # avoid owning/conflicting with a system file the openbox package might
@@ -47,7 +56,7 @@ fi
 export LANG LC_ALL
 
 picom &
-light-locker &
+light-locker --no-late-locking &
 nitrogen --restore &
 manokwari &
 exec openbox
