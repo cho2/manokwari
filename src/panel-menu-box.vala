@@ -23,6 +23,7 @@ public class PanelMenuBox : PanelAbstractWindow {
         }
 
         view = new PanelMenuHTML ();
+        view.dismiss_requested.connect (dismiss);
         view.show_all ();
         add (view);
         set_type_hint (Gdk.WindowTypeHint.DOCK);

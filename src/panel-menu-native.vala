@@ -57,6 +57,12 @@ public class PanelMenuHTML : Gtk.Box {
     Gtk.ListBox app_list;
     PanelUser user;
 
+    // Milestone 5 Tahap 2: lets the session buttons ask PanelMenuBox (the
+    // containing window) to dismiss itself. Needed because PanelMenuBox
+    // holds an X11 keyboard+pointer grab the whole time the menu is open,
+    // and only its own dismiss() releases it -- see the Lock button below.
+    public signal void dismiss_requested ();
+
     public PanelMenuHTML () {
         Object (orientation: Gtk.Orientation.VERTICAL, spacing: 0);
 
@@ -194,7 +200,25 @@ public class PanelMenuHTML : Gtk.Box {
         lock_btn.set_relief (Gtk.ReliefStyle.NONE);
         lock_btn.set_image (new Gtk.Image.from_icon_name ("system-lock-screen", Gtk.IconSize.LARGE_TOOLBAR));
         lock_btn.set_tooltip_text (_("Lock"));
-        lock_btn.clicked.connect (() => { Utils.lock_screen (); });
+        lock_btn.clicked.connect (() => {
+            // Must dismiss the menu FIRST. PanelMenuBox grabs the keyboard
+            // and pointer while open (Utils.grab, for Escape/click-outside
+            // handling); light-locker needs those same grabs to lock. If
+            // the menu still holds them, light-locker retries for ~10s,
+            // fails with "Couldn't grab keyboard! (AlreadyGrabbed)" and
+            // gives up ("Unable to lock the screen") -- confirmed in its
+            // debug log on real hardware. That's what made Lock look like
+            // it had a long delay: the first press silently failed
+            // outright, and only a later press (with the menu by then
+            // closed) actually worked.
+            dismiss_requested ();
+            // Small delay so the X11 ungrab actually takes effect before
+            // light-locker tries to take over.
+            Timeout.add (300, () => {
+                Utils.lock_screen ();
+                return false;
+            });
+        });
         box.pack_start (lock_btn, false, false, 0);
 
         var logout_btn = new Gtk.Button ();
