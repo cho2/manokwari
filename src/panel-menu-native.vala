@@ -63,8 +63,112 @@ public class PanelMenuHTML : Gtk.Box {
     // and only its own dismiss() releases it -- see the Lock button below.
     public signal void dismiss_requested ();
 
+    // Milestone 5 Tahap 3: styling modeled on the pre-fork Manokwari's own
+    // stylesheets, which are still in the tree for reference even though
+    // they're no longer installed (system/css/style.css and sessions.css).
+    // Colors/shapes taken directly from there: #111 page background, #151515
+    // rows with #aaa text, #333/#fff on hover, #1a1a1a user header, the
+    // rounded #2a2a2a search field, #151515 session bar, #333 scrollbar.
+    //
+    // NOT a pixel-perfect reproduction, and can't be: the original's fonts
+    // (Aurulent Sans, Trendex) live in system/fonts/, which stopped being
+    // installed back in Milestone 3 when the whole WebKit frontend went
+    // away -- so this uses the system font instead. Sizes/weights are
+    // approximated to match the original's proportions.
+    //
+    // Every selector is scoped under .manokwari-menu on purpose: the
+    // provider is registered screen-wide (that's how GTK3 CSS works), so
+    // without that scoping this would also restyle the taskbar, the
+    // confirmation dialogs, and anything else this process draws.
+    const string MENU_CSS = """
+    .manokwari-menu {
+        background-color: #111111;
+        color: #aaaaaa;
+    }
+    .manokwari-menu-header {
+        background-color: #1a1a1a;
+    }
+    .manokwari-user-name {
+        font-size: 15px;
+        font-weight: bold;
+        color: #e2e2e2;
+    }
+    .manokwari-user-host {
+        font-size: 12px;
+        color: #999999;
+    }
+    .manokwari-menu entry {
+        background-image: none;
+        background-color: #2a2a2a;
+        border: 2px solid #2a2a2a;
+        border-radius: 20px;
+        color: #aaaaaa;
+        font-size: 12px;
+        padding: 2px 8px;
+    }
+    .manokwari-menu list {
+        background-color: #151515;
+    }
+    .manokwari-menu row {
+        background-color: #151515;
+        color: #aaaaaa;
+        border-bottom: 1px solid #0f0f0f;
+        min-height: 26px;
+        font-size: 12px;
+    }
+    .manokwari-menu row:hover {
+        background-color: #333333;
+        color: #ffffff;
+    }
+    .manokwari-menu separator {
+        background-color: #0f0f0f;
+    }
+    .manokwari-menu scrollbar {
+        background-color: transparent;
+        border: none;
+    }
+    .manokwari-menu scrollbar slider {
+        background-color: #333333;
+        border-radius: 3px;
+        min-width: 6px;
+    }
+    .manokwari-menu scrollbar slider:hover {
+        background-color: #3d3d3d;
+    }
+    .manokwari-sessions {
+        background-color: #151515;
+    }
+    .manokwari-sessions button {
+        background-image: none;
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 4px;
+    }
+    .manokwari-sessions button:hover {
+        background-color: #333333;
+        border-radius: 20px;
+    }
+    """;
+
+    void apply_style () {
+        var provider = new Gtk.CssProvider ();
+        try {
+            provider.load_from_data (MENU_CSS);
+        } catch (Error e) {
+            stderr.printf ("Unable to load menu CSS: %s\n", e.message);
+            return;
+        }
+        Gtk.StyleContext.add_provider_for_screen (
+            Gdk.Screen.get_default (), provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+    }
+
     public PanelMenuHTML () {
         Object (orientation: Gtk.Orientation.VERTICAL, spacing: 0);
+
+        apply_style ();
+        get_style_context ().add_class ("manokwari-menu");
 
         user = new PanelUser ();
 
@@ -88,6 +192,7 @@ public class PanelMenuHTML : Gtk.Box {
     Gtk.Widget build_header () {
         var box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 8);
         box.margin = 10;
+        box.get_style_context ().add_class ("manokwari-menu-header");
 
         var avatar_file = File.new_for_path (user.icon_file);
         Gtk.Image avatar;
@@ -102,10 +207,13 @@ public class PanelMenuHTML : Gtk.Box {
         var labels = new Gtk.Box (Gtk.Orientation.VERTICAL, 2);
         var name_label = new Gtk.Label (user.real_name);
         name_label.halign = Gtk.Align.START;
-        name_label.get_style_context ().add_class ("title-3");
+        // Was "title-3"/"dim-label" -- title-3 is a GTK4/libadwaita class
+        // that does nothing in GTK3, so the name was rendering at plain
+        // body size. Own classes now, styled in MENU_CSS above.
+        name_label.get_style_context ().add_class ("manokwari-user-name");
         var host_label = new Gtk.Label (user.host_name);
         host_label.halign = Gtk.Align.START;
-        host_label.get_style_context ().add_class ("dim-label");
+        host_label.get_style_context ().add_class ("manokwari-user-host");
         labels.pack_start (name_label, false, false, 0);
         labels.pack_start (host_label, false, false, 0);
         box.pack_start (labels, true, true, 0);
@@ -193,8 +301,17 @@ public class PanelMenuHTML : Gtk.Box {
     }
 
     Gtk.Widget build_session_buttons () {
+        // Original's #sessions was a full-width bar (background spanning
+        // the whole menu width) with a centered row of icons inside it.
+        // So: an outer box carrying the background/style class, and a
+        // separate inner box that actually holds the buttons, centered
+        // within it.
+        var bar = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
+        bar.halign = Gtk.Align.FILL;
+        bar.get_style_context ().add_class ("manokwari-sessions");
+
         var box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 4);
-        box.halign = Gtk.Align.CENTER;
+        bar.set_center_widget (box);
 
         var lock_btn = new Gtk.Button ();
         lock_btn.set_relief (Gtk.ReliefStyle.NONE);
@@ -262,7 +379,7 @@ public class PanelMenuHTML : Gtk.Box {
             box.pack_start (shutdown_btn, false, false, 0);
         }
 
-        return box;
+        return bar;
     }
 
     public void start () {
