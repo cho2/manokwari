@@ -111,6 +111,14 @@ public class PanelMenuHTML : Gtk.Box {
     .manokwari-menu separator {
         background-color: #0f0f0f;
     }
+    .manokwari-menu .manokwari-section-label {
+        background-color: #1f1f1f;
+        border-bottom: 1px solid #111111;
+        color: #dddddd;
+        text-shadow: 0 1px 1px #000000;
+        font-size: 12px;
+        padding: 3px 20px;
+    }
     .manokwari-menu scrollbar {
         background-color: transparent;
         border: none;
@@ -159,7 +167,7 @@ public class PanelMenuHTML : Gtk.Box {
         get_style_context ().add_class ("manokwari-menu");
 
         
-
+        pack_start (make_section_label (_("Applications")), false, false, 0);
         
         pack_start (build_search (), false, false, 6);
 
@@ -172,12 +180,20 @@ public class PanelMenuHTML : Gtk.Box {
         pack_start (scroller, true, true, 0);
 
         pack_start (new Gtk.Separator (Gtk.Orientation.HORIZONTAL), false, false, 4);
+        pack_start (make_section_label (_("Places and settings")), false, false, 0);
         pack_start (build_places (), false, false, 4);
         pack_start (new Gtk.Separator (Gtk.Orientation.HORIZONTAL), false, false, 4);
+        pack_start (make_section_label (_("Sessions")), false, false, 0);
         pack_start (build_session_buttons (), false, false, 8);
     }
 
-
+    Gtk.Widget make_section_label (string text) {
+        var label = new Gtk.Label (text);
+        label.halign = Gtk.Align.FILL;
+        label.xalign = 0.5f;
+        label.get_style_context ().add_class ("manokwari-section-label");
+        return label;
+    }
 
     Gtk.Widget build_search () {
         search_entry = new Gtk.SearchEntry ();
