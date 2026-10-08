@@ -55,7 +55,7 @@ class PanelMenuPlaceRow : Gtk.ListBoxRow {
 public class PanelMenuHTML : Gtk.Box {
     Gtk.SearchEntry search_entry;
     Gtk.ListBox app_list;
-    PanelUser user;
+    
 
     // Milestone 5 Tahap 2: lets the session buttons ask PanelMenuBox (the
     // containing window) to dismiss itself. Needed because PanelMenuBox
@@ -67,7 +67,7 @@ public class PanelMenuHTML : Gtk.Box {
     // stylesheets, which are still in the tree for reference even though
     // they're no longer installed (system/css/style.css and sessions.css).
     // Colors/shapes taken directly from there: #111 page background, #151515
-    // rows with #aaa text, #333/#fff on hover, #1a1a1a user header, the
+    // rows with #aaa text, #333/#fff on hover, #1a1a1a, the
     // rounded #2a2a2a search field, #151515 session bar, #333 scrollbar.
     //
     // NOT a pixel-perfect reproduction, and can't be: the original's fonts
@@ -84,18 +84,6 @@ public class PanelMenuHTML : Gtk.Box {
     .manokwari-menu {
         background-color: #111111;
         color: #aaaaaa;
-    }
-    .manokwari-menu-header {
-        background-color: #1a1a1a;
-    }
-    .manokwari-user-name {
-        font-size: 15px;
-        font-weight: bold;
-        color: #e2e2e2;
-    }
-    .manokwari-user-host {
-        font-size: 12px;
-        color: #999999;
     }
     .manokwari-menu entry {
         background-image: none;
@@ -170,9 +158,9 @@ public class PanelMenuHTML : Gtk.Box {
         apply_style ();
         get_style_context ().add_class ("manokwari-menu");
 
-        user = new PanelUser ();
+        
 
-        pack_start (build_header (), false, false, 0);
+        
         pack_start (build_search (), false, false, 6);
 
         var scroller = new Gtk.ScrolledWindow (null, null);
@@ -189,37 +177,7 @@ public class PanelMenuHTML : Gtk.Box {
         pack_start (build_session_buttons (), false, false, 8);
     }
 
-    Gtk.Widget build_header () {
-        var box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 8);
-        box.margin = 10;
-        box.get_style_context ().add_class ("manokwari-menu-header");
 
-        var avatar_file = File.new_for_path (user.icon_file);
-        Gtk.Image avatar;
-        if (avatar_file.query_exists ()) {
-            avatar = new Gtk.Image.from_file (user.icon_file);
-        } else {
-            avatar = new Gtk.Image.from_icon_name ("avatar-default", Gtk.IconSize.DIALOG);
-        }
-        avatar.set_pixel_size (48);
-        box.pack_start (avatar, false, false, 0);
-
-        var labels = new Gtk.Box (Gtk.Orientation.VERTICAL, 2);
-        var name_label = new Gtk.Label (user.real_name);
-        name_label.halign = Gtk.Align.START;
-        // Was "title-3"/"dim-label" -- title-3 is a GTK4/libadwaita class
-        // that does nothing in GTK3, so the name was rendering at plain
-        // body size. Own classes now, styled in MENU_CSS above.
-        name_label.get_style_context ().add_class ("manokwari-user-name");
-        var host_label = new Gtk.Label (user.host_name);
-        host_label.halign = Gtk.Align.START;
-        host_label.get_style_context ().add_class ("manokwari-user-host");
-        labels.pack_start (name_label, false, false, 0);
-        labels.pack_start (host_label, false, false, 0);
-        box.pack_start (labels, true, true, 0);
-
-        return box;
-    }
 
     Gtk.Widget build_search () {
         search_entry = new Gtk.SearchEntry ();
