@@ -180,7 +180,7 @@ public class PanelMenuHTML : Gtk.Box {
         pack_start (scroller, true, true, 0);
 
         pack_start (new Gtk.Separator (Gtk.Orientation.HORIZONTAL), false, false, 4);
-        pack_start (make_section_label (_("Places and settings")), false, false, 0);
+        pack_start (make_section_label (_("Places & Settings")), false, false, 0);
         pack_start (build_places (), false, false, 4);
         pack_start (new Gtk.Separator (Gtk.Orientation.HORIZONTAL), false, false, 4);
         pack_start (make_section_label (_("Sessions")), false, false, 0);
