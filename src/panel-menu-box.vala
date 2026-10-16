@@ -38,11 +38,6 @@ public class PanelMenuBox : PanelAbstractWindow {
         override_background_color(StateFlags.NORMAL, c);
         set_app_paintable(true);
 
-        PanelScreen.move_window (this, Gdk.Gravity.NORTH_WEST);
-        view.start();
-
-        hide ();
-
         button_press_event.connect((event) => {
 
         stdout.printf("xxx\n");
@@ -56,13 +51,18 @@ public class PanelMenuBox : PanelAbstractWindow {
         });
 
         screen_size_changed.connect (() =>  {
+            int bar_height = 24;
             PanelScreen.move_window (this, Gdk.Gravity.NORTH_WEST);
-            queue_resize ();
+            move (0, bar_height);
         });
 
         map_event.connect (() => {
+            var geo = PanelScreen.get_primary_monitor_geometry ();
+            int bar_height = 24;
+            set_size_request (COLUMN_WIDTH, geo.height - bar_height);
             shown ();
             PanelScreen.move_window (this, Gdk.Gravity.NORTH_WEST);
+            move (0, bar_height);
             get_window ().raise ();
             Utils.grab (this);
             view.triggerShowAnimation();
@@ -89,7 +89,7 @@ public class PanelMenuBox : PanelAbstractWindow {
     }
 
     public override void get_preferred_height (out int min, out int max) {
-        min = max = PanelScreen.get_primary_monitor_geometry ().height; 
+        min = max = PanelScreen.get_primary_monitor_geometry ().height - 24;
     }
 
     private void dismiss () {
