@@ -121,3 +121,4 @@ subdir('src')
 # loaded by any code (confirmed: the only Gtk.CssProvider in the whole
 # codebase is the one added for the clock widget in Fase 2 -- unrelated).
 subdir('files')
+subdir('system/fonts')
