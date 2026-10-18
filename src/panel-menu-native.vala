@@ -84,6 +84,7 @@ public class PanelMenuHTML : Gtk.Box {
     .manokwari-menu {
         background-color: #111111;
         color: #aaaaaa;
+        font-family: "Aurulent Sans", sans-serif;
     }
     .manokwari-menu entry {
         background-image: none;

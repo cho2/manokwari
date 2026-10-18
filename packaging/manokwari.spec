@@ -70,4 +70,10 @@ status.
 %dir %{_datadir}/locale/su/LC_MESSAGES
 %{_datadir}/locale/su/LC_MESSAGES/%{name}.mo
 
+%post
+/usr/bin/fc-cache %{_datadir}/fonts/manokwari &>/dev/null || :
+
+%postun
+/usr/bin/fc-cache %{_datadir}/fonts/manokwari &>/dev/null || :
+
 %changelog
