@@ -1,4 +1,4 @@
-// Fase 1 (Milestone 3, Opsi B): native GTK replacement for the WebKit-based
+f// Fase 1 (Milestone 3, Opsi B): native GTK replacement for the WebKit-based
 // menu.html start menu. Talks directly to the same Vala classes menu.html
 // used to call into over the JS bridge (PanelUser, PanelSessionManager) --
 // no JSON/JS layer needed anymore. App listing uses GLib.AppInfo/
@@ -146,6 +146,23 @@ public class PanelMenuHTML : Gtk.Box {
         background-color: #333333;
         border-radius: 20px;
     }
+    .manokwari-places-header {
+        background-color: #151515;
+        color: #aaaaaa;
+        font-size: 12px;
+        border-bottom: 1px solid #0f0f0f;
+    }
+    .manokwari-places-header:hover {
+        background-color: #333333;
+        color: #ffffff;
+    }
+    .manokwari-places-arrow {
+        color: #666666;
+        font-size: 10px;
+    }
+    .manokwari-places-list row {
+        padding-left: 20px;
+    }
     """;
 
     void apply_style () {
@@ -240,8 +257,40 @@ public class PanelMenuHTML : Gtk.Box {
     }
 
     Gtk.Widget build_places () {
+        var container = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+
+        // Header "Locations" -- clickable, toggles the revealer below
+        var header = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
+        header.margin = 4;
+        header.get_style_context ().add_class ("manokwari-places-header");
+
+        var arrow = new Gtk.Label ("▶");
+        arrow.get_style_context ().add_class ("manokwari-places-arrow");
+        header.pack_start (arrow, false, false, 4);
+
+        var title = new Gtk.Label (_("Locations"));
+        title.halign = Gtk.Align.START;
+        header.pack_start (title, true, true, 0);
+
+        var revealer = new Gtk.Revealer ();
+        revealer.set_transition_type (Gtk.RevealerTransitionType.SLIDE_DOWN);
+        revealer.set_transition_duration (150);
+        revealer.set_reveal_child (false);
+
+        var header_btn = new Gtk.EventBox ();
+        header_btn.add (header);
+        header_btn.button_press_event.connect (() => {
+            var expanded = !revealer.get_reveal_child ();
+            revealer.set_reveal_child (expanded);
+            arrow.set_text (expanded ? "▼" : "▶");
+            return true;
+        });
+        container.pack_start (header_btn, false, false, 0);
+
+        // Content inside the revealer
         var list = new Gtk.ListBox ();
         list.set_selection_mode (Gtk.SelectionMode.NONE);
+        list.get_style_context ().add_class ("manokwari-places-list");
         list.row_activated.connect ((row) => {
             var place_row = row as PanelMenuPlaceRow;
             if (place_row == null) return;
@@ -272,7 +321,10 @@ public class PanelMenuHTML : Gtk.Box {
             list.add (new PanelMenuPlaceRow (mount.get_name (), "drive-harddisk", mount.get_root ().get_uri ()));
         }
 
-        return list;
+        revealer.add (list);
+        container.pack_start (revealer, false, false, 0);
+
+        return container;
     }
 
     Gtk.Widget build_session_buttons () {
