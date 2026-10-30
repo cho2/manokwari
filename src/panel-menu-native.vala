@@ -79,6 +79,7 @@ public class PanelMenuHTML : Gtk.Box {
         { "Science",          "Science"           },
         { "System",           "System"            },
         { "Universal",        "Accessibility"     },
+        { "YaST",             "X-SuSE-YaST"       },
         { "Other",            ""                  },  // catch-all, filled last
     };
 
@@ -111,7 +112,19 @@ public class PanelMenuHTML : Gtk.Box {
             var cats = cats_raw.split (";");
 
             bool placed = false;
-            for (int i = 0; i < n - 1; i++) {  // skip "Other" (last)
+
+            // YaST first: its modules also carry Settings;System, so the
+            // generic "Administration" rule (Settings AND System) would
+            // otherwise claim them before the YaST row is ever reached.
+            foreach (var c in cats) {
+                if (c == "X-SuSE-YaST") {
+                    map.get ("YaST").add (app);
+                    placed = true;
+                    break;
+                }
+            }
+
+            for (int i = 0; !placed && i < n - 1; i++) {  // skip "Other" (last)
                 var label = CATEGORIES[i, 0];
                 var required = CATEGORIES[i, 1];
 
