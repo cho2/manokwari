@@ -1,4 +1,4 @@
-f// Fase 1 (Milestone 3, Opsi B): native GTK replacement for the WebKit-based
+// Fase 1 (Milestone 3, Opsi B): native GTK replacement for the WebKit-based
 // menu.html start menu. Talks directly to the same Vala classes menu.html
 // used to call into over the JS bridge (PanelUser, PanelSessionManager) --
 // no JSON/JS layer needed anymore. App listing uses GLib.AppInfo/
@@ -54,9 +54,162 @@ class PanelMenuPlaceRow : Gtk.ListBoxRow {
 
 public class PanelMenuHTML : Gtk.Box {
     Gtk.SearchEntry search_entry;
-    Gtk.ListBox app_list;
-    
+    Gtk.ListBox app_list;        // used in search mode
+    Gtk.Widget category_box;     // used in browse mode (default)
+    Gtk.ScrolledWindow scroller; // shared container, swaps content
 
+    // Category definitions for 3c. Order here = display order (alphabetical).
+    // XDG Categories= values that map to each label.
+    // Source: files/menus/manokwari-applications.menu (kept in tree for reference).
+    // Dropped: Geo.BlankOn (Category=Peta, BlankOn-specific),
+    //          Debian (merge file, Milestone 4 decision).
+    // Kept:    Islamic-Software (Category=X-Islamic-Software, on request).
+    private const string[,] CATEGORIES = {
+        { "Accessories",      "Utility"           },
+        { "Administration",   "Settings:System"   },  // AND: both required
+        { "Development",      "Development"       },
+        { "Education",        "Education"         },
+        { "Games",            "Game"              },
+        { "Graphics",         "Graphics"          },
+        { "Internet",         "Network"           },
+        { "Islamic Software", "X-Islamic-Software"},
+        { "Multimedia",       "AudioVideo"        },
+        { "Office",           "Office"            },
+        { "Preferences",      "Settings"          },  // Settings but NOT System
+        { "Science",          "Science"           },
+        { "System",           "System"            },
+        { "Universal",        "Accessibility"     },
+        { "Other",            ""                  },  // catch-all, filled last
+    };
+
+    // Builds a mapping of category label → sorted list of AppInfo.
+    // Apps that match no category land in "Other".
+    // Apps are sorted alphabetically within each category.
+    // Returned keys preserve CATEGORIES order (insertion-ordered HashMap
+    // from libgee).
+    Gee.HashMap<string, Gee.ArrayList<AppInfo>> build_category_map () {
+        var map = new Gee.HashMap<string, Gee.ArrayList<AppInfo>> ();
+
+        // Pre-populate in display order so keys are always in CATEGORIES order.
+        int n = CATEGORIES.length[0];
+        for (int i = 0; i < n; i++) {
+            map.set (CATEGORIES[i, 0], new Gee.ArrayList<AppInfo> ());
+        }
+
+        var all_apps = AppInfo.get_all ();
+        all_apps.sort ((a, b) => strcmp (
+            a.get_display_name () ?? "",
+            b.get_display_name () ?? ""));
+
+        foreach (var app in all_apps) {
+            if (!app.should_show ()) continue;
+
+            var dai = app as DesktopAppInfo;
+            if (dai == null) continue;
+
+            var cats_raw = dai.get_categories () ?? "";
+            var cats = cats_raw.split (";");
+
+            bool placed = false;
+            for (int i = 0; i < n - 1; i++) {  // skip "Other" (last)
+                var label = CATEGORIES[i, 0];
+                var required = CATEGORIES[i, 1];
+
+                if (required == "") continue;
+
+                if (required.contains (":")) {
+                    // AND logic: all tokens must be present (e.g. "Settings:System")
+                    var tokens = required.split (":");
+                    bool all_match = true;
+                    foreach (var token in tokens) {
+                        bool found = false;
+                        foreach (var c in cats) {
+                            if (c == token) { found = true; break; }
+                        }
+                        if (!found) { all_match = false; break; }
+                    }
+                    if (all_match) {
+                        map.get (label).add (app);
+                        placed = true;
+                        break;
+                    }
+                } else {
+                    // Single category match
+                    foreach (var c in cats) {
+                        if (c == required) {
+                            map.get (label).add (app);
+                            placed = true;
+                            break;
+                        }
+                    }
+                    if (placed) break;
+                }
+            }
+
+            if (!placed) {
+                map.get ("Other").add (app);
+            }
+        }
+
+        return map;
+    }    
+
+    Gtk.Widget build_category_ui () {
+        var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+        var cat_map = build_category_map ();
+
+        int n = CATEGORIES.length[0];
+        for (int i = 0; i < n; i++) {
+            var label = CATEGORIES[i, 0];
+            var apps  = cat_map.get (label);
+            if (apps == null || apps.size == 0) continue;
+
+            // Category header row (same pattern as Locations in 3b)
+            var header_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
+            header_box.margin = 4;
+            header_box.get_style_context ().add_class ("manokwari-category-header");
+
+            var arrow = new Gtk.Label ("▶");
+            arrow.get_style_context ().add_class ("manokwari-category-arrow");
+            header_box.pack_start (arrow, false, false, 4);
+
+            var title = new Gtk.Label (label);
+            title.halign = Gtk.Align.START;
+            header_box.pack_start (title, true, true, 0);
+
+            var revealer = new Gtk.Revealer ();
+            revealer.set_transition_type (Gtk.RevealerTransitionType.SLIDE_DOWN);
+            revealer.set_transition_duration (150);
+            revealer.set_reveal_child (false);
+
+            var header_btn = new Gtk.EventBox ();
+            header_btn.add (header_box);
+            header_btn.button_press_event.connect (() => {
+                var expanded = !revealer.get_reveal_child ();
+                revealer.set_reveal_child (expanded);
+                arrow.set_text (expanded ? "▼" : "▶");
+                return true;
+            });
+            box.pack_start (header_btn, false, false, 0);
+
+            // App list inside revealer
+            var app_list_cat = new Gtk.ListBox ();
+            app_list_cat.set_selection_mode (Gtk.SelectionMode.NONE);
+            app_list_cat.get_style_context ().add_class ("manokwari-category-list");
+            app_list_cat.row_activated.connect (on_app_row_activated);
+
+            foreach (var app in apps) {
+                app_list_cat.add (new PanelMenuAppRow (app));
+            }
+            app_list_cat.show_all ();
+
+            revealer.add (app_list_cat);
+            box.pack_start (revealer, false, false, 0);
+        }
+
+        box.show_all ();
+        return box;
+    }
     // Milestone 5 Tahap 2: lets the session buttons ask PanelMenuBox (the
     // containing window) to dismiss itself. Needed because PanelMenuBox
     // holds an X11 keyboard+pointer grab the whole time the menu is open,
@@ -119,6 +272,7 @@ public class PanelMenuHTML : Gtk.Box {
         text-shadow: 0 1px 1px #000000;
         font-size: 12px;
         padding: 3px 20px;
+        min-height: 26px;
     }
     .manokwari-menu scrollbar {
         background-color: transparent;
@@ -151,6 +305,7 @@ public class PanelMenuHTML : Gtk.Box {
         color: #aaaaaa;
         font-size: 12px;
         border-bottom: 1px solid #0f0f0f;
+        min-height: 26px;
     }
     .manokwari-places-header:hover {
         background-color: #333333;
@@ -162,6 +317,37 @@ public class PanelMenuHTML : Gtk.Box {
     }
     .manokwari-places-list row {
         padding-left: 20px;
+    }
+    .manokwari-category-header {
+        background-color: #1a1a1a;
+        color: #cccccc;
+        font-size: 12px;
+        border-bottom: 1px solid #0f0f0f;
+        min-height: 26px;
+    }
+    .manokwari-category-header:hover {
+        background-color: #333333;
+        color: #ffffff;
+    }
+    .manokwari-category-arrow {
+        color: #666666;
+        font-size: 10px;
+    }
+    .manokwari-category-list row {
+        background-color: #111111;
+        color: #aaaaaa;
+        border-bottom: 1px solid #0d0d0d;
+        min-height: 26px;
+        font-size: 12px;
+        padding-left: 20px;
+    }
+    .manokwari-category-list row:hover {
+        background-color: #333333;
+        color: #ffffff;
+    }
+    .manokwari-menu entry:focus {
+        border-color: #2a2a2a;
+        box-shadow: none;
     }
     """;
 
@@ -189,12 +375,15 @@ public class PanelMenuHTML : Gtk.Box {
         
         pack_start (build_search (), false, false, 6);
 
-        var scroller = new Gtk.ScrolledWindow (null, null);
+        scroller = new Gtk.ScrolledWindow (null, null);
         scroller.set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+
         app_list = new Gtk.ListBox ();
         app_list.set_selection_mode (Gtk.SelectionMode.NONE);
         app_list.row_activated.connect (on_app_row_activated);
-        scroller.add (app_list);
+
+        category_box = build_category_ui ();
+        scroller.add (category_box);
         pack_start (scroller, true, true, 0);
 
         pack_start (new Gtk.Separator (Gtk.Orientation.HORIZONTAL), false, false, 4);
@@ -223,24 +412,37 @@ public class PanelMenuHTML : Gtk.Box {
     }
 
     void populate_apps () {
+        var query = search_entry.text.down ().strip ();
+
+        if (query == "") {
+            // Browse mode: show category tree
+            if (scroller.get_child () != category_box) {
+                scroller.remove (scroller.get_child ());
+                scroller.add (category_box);
+                scroller.show_all ();
+            }
+            return;
+        }
+
+        // Search mode: show flat filtered list
+        if (scroller.get_child () != app_list) {
+            scroller.remove (scroller.get_child ());
+            scroller.add (app_list);
+        }
+
         foreach (var child in app_list.get_children ()) {
             app_list.remove (child);
         }
 
-        var query = search_entry.text.down ();
         var apps = AppInfo.get_all ();
-        apps.sort ((a, b) => {
-            return strcmp (a.get_display_name () ?? "", b.get_display_name () ?? "");
-        });
+        apps.sort ((a, b) => strcmp (
+            a.get_display_name () ?? "",
+            b.get_display_name () ?? ""));
 
         foreach (var app in apps) {
-            if (!app.should_show ()) {
-                continue;
-            }
+            if (!app.should_show ()) continue;
             var name = app.get_display_name () ?? "";
-            if (query != "" && !(name.down ().contains (query))) {
-                continue;
-            }
+            if (!name.down ().contains (query)) continue;
             app_list.add (new PanelMenuAppRow (app));
         }
         app_list.show_all ();
@@ -410,7 +612,9 @@ public class PanelMenuHTML : Gtk.Box {
     }
 
     public void start () {
-        populate_apps ();
+        // Browse mode is already shown by default (category_box in scroller).
+        // Nothing to do here -- populate_apps() will switch to search mode
+        // when the user types, and back to browse mode when they clear it.
     }
 
     public void triggerShowAnimation () {
