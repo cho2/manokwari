@@ -332,7 +332,7 @@ public class PanelMenuHTML : Gtk.Box {
         padding-left: 20px;
     }
     .manokwari-category-header {
-        background-color: #1a1a1a;
+        background-color: #111111;
         color: #cccccc;
         font-size: 12px;
         border-bottom: 1px solid #0f0f0f;
