@@ -182,13 +182,13 @@ public class PanelMenuHTML : Gtk.Box {
             header_box.margin = 4;
             header_box.get_style_context ().add_class ("manokwari-category-header");
 
-            var arrow = new Gtk.Label ("▶");
-            arrow.get_style_context ().add_class ("manokwari-category-arrow");
-            header_box.pack_start (arrow, false, false, 4);
-
             var title = new Gtk.Label (label);
             title.halign = Gtk.Align.START;
             header_box.pack_start (title, true, true, 0);
+
+            var arrow = new Gtk.Label ("▶");
+            arrow.get_style_context ().add_class ("manokwari-category-arrow");
+            header_box.pack_end (arrow, false, false, 4);
 
             var revealer = new Gtk.Revealer ();
             revealer.set_transition_type (Gtk.RevealerTransitionType.SLIDE_DOWN);
@@ -343,6 +343,10 @@ public class PanelMenuHTML : Gtk.Box {
         color: #ffffff;
     }
     .manokwari-category-arrow {
+        color: #555555;
+        font-size: 10px;
+    }
+    .manokwari-places-arrow {
         color: #666666;
         font-size: 10px;
     }
@@ -479,13 +483,13 @@ public class PanelMenuHTML : Gtk.Box {
         header.margin = 4;
         header.get_style_context ().add_class ("manokwari-places-header");
 
-        var arrow = new Gtk.Label ("▶");
-        arrow.get_style_context ().add_class ("manokwari-places-arrow");
-        header.pack_start (arrow, false, false, 4);
-
         var title = new Gtk.Label (_("Locations"));
         title.halign = Gtk.Align.START;
         header.pack_start (title, true, true, 0);
+
+        var arrow = new Gtk.Label ("▶");
+        arrow.get_style_context ().add_class ("manokwari-places-arrow");
+        header.pack_end (arrow, false, false, 4);
 
         var revealer = new Gtk.Revealer ();
         revealer.set_transition_type (Gtk.RevealerTransitionType.SLIDE_DOWN);
