@@ -65,22 +65,22 @@ public class PanelMenuHTML : Gtk.Box {
     //          Debian (merge file, Milestone 4 decision).
     // Kept:    Islamic-Software (Category=X-Islamic-Software, on request).
     private const string[,] CATEGORIES = {
-        { "Accessories",      "Utility"           },
-        { "Administration",   "Settings:System"   },  // AND: both required
-        { "Development",      "Development"       },
-        { "Education",        "Education"         },
-        { "Games",            "Game"              },
-        { "Graphics",         "Graphics"          },
-        { "Internet",         "Network"           },
-        { "Islamic Software", "X-Islamic-Software"},
-        { "Multimedia",       "AudioVideo"        },
-        { "Office",           "Office"            },
-        { "Preferences",      "Settings"          },  // Settings but NOT System
-        { "Science",          "Science"           },
-        { "System",           "System"            },
-        { "Universal",        "Accessibility"     },
-        { "YaST",             "X-SuSE-YaST"       },
-        { "Other",            ""                  },  // catch-all, filled last
+        { "Accessories",      "Utility",            "applications-accessories"          },
+        { "Administration",   "Settings:System",    "applications-system"               },
+        { "Development",      "Development",        "applications-development"          },
+        { "Education",        "Education",          "applications-education"            },
+        { "Games",            "Game",               "applications-games"                },
+        { "Graphics",         "Graphics",           "applications-graphics"             },
+        { "Internet",         "Network",            "applications-internet"             },
+        { "Islamic Software", "X-Islamic-Software", "applications-other"                },
+        { "Multimedia",       "AudioVideo",         "applications-multimedia"           },
+        { "Office",           "Office",             "applications-office"               },
+        { "Preferences",      "Settings",           "preferences-system"                },
+        { "Science",          "Science",            "applications-science"              },
+        { "System",           "System",             "system-run"                        },
+        { "Universal",        "Accessibility",      "preferences-desktop-accessibility" },
+        { "YaST",             "X-SuSE-YaST",        "yast"                              },
+        { "Other",            "",                   "applications-other"                },
     };
 
     // Builds a mapping of category label → sorted list of AppInfo.
@@ -181,6 +181,10 @@ public class PanelMenuHTML : Gtk.Box {
             var header_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
             header_box.margin = 4;
             header_box.get_style_context ().add_class ("manokwari-category-header");
+
+            var icon_name = CATEGORIES[i, 2];
+            var cat_icon = new Gtk.Image.from_icon_name (icon_name, Gtk.IconSize.MENU);
+            header_box.pack_start (cat_icon, false, false, 4);
 
             var title = new Gtk.Label (label);
             title.halign = Gtk.Align.START;
