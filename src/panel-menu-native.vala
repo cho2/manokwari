@@ -190,7 +190,7 @@ public class PanelMenuHTML : Gtk.Box {
             title.halign = Gtk.Align.START;
             header_box.pack_start (title, true, true, 0);
 
-            var arrow = new Gtk.Label ("▶");
+            var arrow = new Gtk.Label ("▾");
             arrow.get_style_context ().add_class ("manokwari-category-arrow");
             header_box.pack_end (arrow, false, false, 4);
 
@@ -204,7 +204,7 @@ public class PanelMenuHTML : Gtk.Box {
             header_btn.button_press_event.connect (() => {
                 var expanded = !revealer.get_reveal_child ();
                 revealer.set_reveal_child (expanded);
-                arrow.set_text (expanded ? "▼" : "▶");
+                arrow.set_text (expanded ? "▴" : "▾");
                 return true;
             });
             box.pack_start (header_btn, false, false, 0);
@@ -491,7 +491,7 @@ public class PanelMenuHTML : Gtk.Box {
         title.halign = Gtk.Align.START;
         header.pack_start (title, true, true, 0);
 
-        var arrow = new Gtk.Label ("▶");
+        var arrow = new Gtk.Label ("▾");
         arrow.get_style_context ().add_class ("manokwari-places-arrow");
         header.pack_end (arrow, false, false, 4);
 
@@ -505,7 +505,7 @@ public class PanelMenuHTML : Gtk.Box {
         header_btn.button_press_event.connect (() => {
             var expanded = !revealer.get_reveal_child ();
             revealer.set_reveal_child (expanded);
-            arrow.set_text (expanded ? "▼" : "▶");
+            arrow.set_text (expanded ? "▴" : "▾");
             return true;
         });
         container.pack_start (header_btn, false, false, 0);
