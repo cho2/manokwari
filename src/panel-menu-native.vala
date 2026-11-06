@@ -1,15 +1,3 @@
-// Fase 1 (Milestone 3, Opsi B): native GTK replacement for the WebKit-based
-// menu.html start menu. Talks directly to the same Vala classes menu.html
-// used to call into over the JS bridge (PanelUser, PanelSessionManager) --
-// no JSON/JS layer needed anymore. App listing uses GLib.AppInfo/
-// GLib.DesktopAppInfo (GIO, already a dependency) instead of the removed
-// libgnome-menu-3.0/GMenu.Tree.
-//
-// Class kept as "PanelMenuHTML" to match the existing contract expected by
-// panel-menu-box.vala (start/triggerShowAnimation/triggerHideAnimation/
-// handleEsc) from the Milestone 1 stub -- only the implementation changes,
-// not the interface, so the consumer needed zero changes.
-
 class PanelMenuAppRow : Gtk.ListBoxRow {
     public AppInfo app_info;
 
@@ -58,12 +46,6 @@ public class PanelMenuHTML : Gtk.Box {
     Gtk.Widget category_box;     // used in browse mode (default)
     Gtk.ScrolledWindow scroller; // shared container, swaps content
 
-    // Category definitions for 3c. Order here = display order (alphabetical).
-    // XDG Categories= values that map to each label.
-    // Source: files/menus/manokwari-applications.menu (kept in tree for reference).
-    // Dropped: Geo.BlankOn (Category=Peta, BlankOn-specific),
-    //          Debian (merge file, Milestone 4 decision).
-    // Kept:    Islamic-Software (Category=X-Islamic-Software, on request).
     private const string[,] CATEGORIES = {
         { "Accessories",      "Utility",            "applications-accessories"          },
         { "Administration",   "Settings:System",    "applications-system"               },
@@ -83,11 +65,6 @@ public class PanelMenuHTML : Gtk.Box {
         { "Other",            "",                   "applications-other"                },
     };
 
-    // Builds a mapping of category label → sorted list of AppInfo.
-    // Apps that match no category land in "Other".
-    // Apps are sorted alphabetically within each category.
-    // Returned keys preserve CATEGORIES order (insertion-ordered HashMap
-    // from libgee).
     Gee.HashMap<string, Gee.ArrayList<AppInfo>> build_category_map () {
         var map = new Gee.HashMap<string, Gee.ArrayList<AppInfo>> ();
 
@@ -227,29 +204,8 @@ public class PanelMenuHTML : Gtk.Box {
         box.show_all ();
         return box;
     }
-    // Milestone 5 Tahap 2: lets the session buttons ask PanelMenuBox (the
-    // containing window) to dismiss itself. Needed because PanelMenuBox
-    // holds an X11 keyboard+pointer grab the whole time the menu is open,
-    // and only its own dismiss() releases it -- see the Lock button below.
     public signal void dismiss_requested ();
 
-    // Milestone 5 Tahap 3: styling modeled on the pre-fork Manokwari's own
-    // stylesheets, which are still in the tree for reference even though
-    // they're no longer installed (system/css/style.css and sessions.css).
-    // Colors/shapes taken directly from there: #111 page background, #151515
-    // rows with #aaa text, #333/#fff on hover, #1a1a1a, the
-    // rounded #2a2a2a search field, #151515 session bar, #333 scrollbar.
-    //
-    // NOT a pixel-perfect reproduction, and can't be: the original's fonts
-    // (Aurulent Sans, Trendex) live in system/fonts/, which stopped being
-    // installed back in Milestone 3 when the whole WebKit frontend went
-    // away -- so this uses the system font instead. Sizes/weights are
-    // approximated to match the original's proportions.
-    //
-    // Every selector is scoped under .manokwari-menu on purpose: the
-    // provider is registered screen-wide (that's how GTK3 CSS works), so
-    // without that scoping this would also restyle the taskbar, the
-    // confirmation dialogs, and anything else this process draws.
     const string MENU_CSS = """
     .manokwari-menu {
         background-color: #111111;
@@ -547,15 +503,33 @@ public class PanelMenuHTML : Gtk.Box {
         revealer.add (list);
         container.pack_start (revealer, false, false, 0);
 
+        var settings_row = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
+        settings_row.margin = 4;
+
+        var settings_icon = new Gtk.Image.from_icon_name ("preferences-desktop", Gtk.IconSize.MENU);
+        settings_row.pack_start (settings_icon, false, false, 4);
+
+        var settings_label = new Gtk.Label (_("Settings"));
+        settings_label.halign = Gtk.Align.START;
+        settings_row.pack_start (settings_label, true, true, 0);
+
+        var settings_btn = new Gtk.EventBox ();
+        settings_btn.add (settings_row);
+        settings_btn.get_style_context ().add_class ("manokwari-places-header");
+        settings_btn.button_press_event.connect (() => {
+            try {
+                GLib.Process.spawn_command_line_async ("lxappearance");
+            } catch (SpawnError e) {
+                stderr.printf ("Unable to launch lxappearance: %s\n", e.message);
+            }
+            return true;
+        });
+        container.pack_start (settings_btn, false, false, 0);
+
         return container;
     }
 
     Gtk.Widget build_session_buttons () {
-        // Original's #sessions was a full-width bar (background spanning
-        // the whole menu width) with a centered row of icons inside it.
-        // So: an outer box carrying the background/style class, and a
-        // separate inner box that actually holds the buttons, centered
-        // within it.
         var bar = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
         bar.halign = Gtk.Align.FILL;
         bar.get_style_context ().add_class ("manokwari-sessions");
@@ -568,19 +542,7 @@ public class PanelMenuHTML : Gtk.Box {
         lock_btn.set_image (new Gtk.Image.from_icon_name ("system-lock-screen", Gtk.IconSize.LARGE_TOOLBAR));
         lock_btn.set_tooltip_text (_("Lock"));
         lock_btn.clicked.connect (() => {
-            // Must dismiss the menu FIRST. PanelMenuBox grabs the keyboard
-            // and pointer while open (Utils.grab, for Escape/click-outside
-            // handling); light-locker needs those same grabs to lock. If
-            // the menu still holds them, light-locker retries for ~10s,
-            // fails with "Couldn't grab keyboard! (AlreadyGrabbed)" and
-            // gives up ("Unable to lock the screen") -- confirmed in its
-            // debug log on real hardware. That's what made Lock look like
-            // it had a long delay: the first press silently failed
-            // outright, and only a later press (with the menu by then
-            // closed) actually worked.
             dismiss_requested ();
-            // Small delay so the X11 ungrab actually takes effect before
-            // light-locker tries to take over.
             Timeout.add (300, () => {
                 Utils.lock_screen ();
                 return false;
@@ -600,11 +562,6 @@ public class PanelMenuHTML : Gtk.Box {
         restart_btn.set_image (new Gtk.Image.from_icon_name ("system-reboot", Gtk.IconSize.LARGE_TOOLBAR));
         restart_btn.set_tooltip_text (_("Restart"));
         restart_btn.clicked.connect (() => {
-            // Milestone 5 Tahap 1: confirm before acting, using
-            // PanelEndSessionDialog (kept unused since Milestone 3 for
-            // exactly this). type=2 is restart; the dialog also
-            // auto-confirms itself after a 10s countdown if not canceled,
-            // matching the original gnome-session behavior.
             var dialog = new PanelEndSessionDialog ();
             dialog.confirmed_reboot.connect (() => {
                 PanelSessionManager.getInstance ().reboot.begin ();
@@ -619,7 +576,6 @@ public class PanelMenuHTML : Gtk.Box {
             shutdown_btn.set_image (new Gtk.Image.from_icon_name ("system-shutdown", Gtk.IconSize.LARGE_TOOLBAR));
             shutdown_btn.set_tooltip_text (_("Shutdown"));
             shutdown_btn.clicked.connect (() => {
-                // type=1 is shutdown -- same dialog/countdown pattern as restart.
                 var dialog = new PanelEndSessionDialog ();
                 dialog.confirmed_shutdown.connect (() => {
                     PanelSessionManager.getInstance ().shutdown.begin ();
@@ -633,9 +589,6 @@ public class PanelMenuHTML : Gtk.Box {
     }
 
     public void start () {
-        // Browse mode is already shown by default (category_box in scroller).
-        // Nothing to do here -- populate_apps() will switch to search mode
-        // when the user types, and back to browse mode when they clear it.
     }
 
     public void triggerShowAnimation () {

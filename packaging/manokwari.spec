@@ -23,25 +23,15 @@ BuildRequires:  pkgconfig(libwnck-3.0)
 BuildRequires:  pkgconfig(libnotify)
 BuildRequires:  pkgconfig(x11)
 
-# Milestone 3: Manokwari pairs with Openbox (window manager, EWMH-compliant
-# for the libwnck-based taskbar) and picom (compositing, needed for the
-# clock widget's RGBA transparency) instead of gnome-session + mutter.
-# See files/bin/manokwari-session.
 Requires:       openbox
 Requires:       picom
-# Milestone 5 Tahap 2: light-locker actually locks the screen (needs LightDM
-# as the display manager); nitrogen reapplies/lets the user set a wallpaper.
 Requires:       light-locker
 Requires:       nitrogen
+Requires:       obconf
+Requires:       lxappearance-obconf
 
 %description
-Manokwari (Reborn) is an independent fork of the BlankOn Manokwari desktop
-panel (https://github.com/BlankOn/manokwari), modernized and decoupled
-from GNOME-specific dependencies. It pairs with Openbox (window manager)
-and picom (compositing) instead of gnome-session/mutter. This is an
-early-stage hobby project -- the original WebKit-based frontend has been
-replaced with native GTK widgets. See ROADMAP.md upstream for current
-status.
+Manokwari reborn
 
 %prep
 %setup -q
@@ -55,7 +45,7 @@ status.
 
 %files
 %license COPYING
-%doc README.md ROADMAP.md INVENTORY.md
+%doc README.md
 %{_bindir}/manokwari
 %{_bindir}/manokwari-session
 %{_datadir}/xsessions/manokwari.desktop
