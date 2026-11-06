@@ -1,11 +1,12 @@
 using GLib;
 using Gtk;
-
+// using JSCore; removed. JS-bridge block below guarded out.
 // This class prepares data in desktop 
 public class PanelDesktopData {
 
     FileMonitor desktop_monitor = null;
     StringBuilder json; // use StringBuilder to avoid appending immutable strings
+    // static Context* jsContext; / JSCore.Object* jsObject; removed
     uint scheduled = 0;
     uint64 last_schedule = 0;
     string path;
