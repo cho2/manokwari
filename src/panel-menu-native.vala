@@ -445,6 +445,9 @@ public class PanelMenuHTML : Gtk.Box {
 
         var title = new Gtk.Label (_("Locations"));
         title.halign = Gtk.Align.START;
+        var locations_icon = new Gtk.Image.from_icon_name ("folder", Gtk.IconSize.MENU);
+        header.pack_start (locations_icon, false, false, 4);
+
         header.pack_start (title, true, true, 0);
 
         var arrow = new Gtk.Label ("▾");
