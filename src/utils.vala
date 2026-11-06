@@ -1,8 +1,5 @@
 using Gtk;
-// STUB (Milestone 1): `using JSCore;` removed along with webkitgtk-3.0. The whole
-// JS-bridge block below (js_run_desktop..setup_js_class) is guarded out until
-// Milestone 3 decides how the frontend talks to native code (webkit2gtk-4.1
-// script messages, or a straight rewrite to native GTK widgets).
+// using JSCore; removed along with webkitgtk-3.0.
 
 namespace Utils {
     public bool launch_search () {
@@ -24,13 +21,6 @@ namespace Utils {
     }
 
     public bool lock_screen () {
-        // Milestone 5 Tahap 2: gnome-screensaver-command replaced with
-        // org.freedesktop.login1.Session.Lock() -- same GetSessionByPID
-        // pattern already used for brightness (panel-window.vala) and
-        // reboot/shutdown (panel-session-manager.vala). Lock() itself just
-        // asks logind to emit its Lock signal; light-locker (new runtime
-        // dependency, started in files/bin/manokwari-session) is what
-        // actually listens for that and locks the screen.
         try {
             Login1Manager manager = Bus.get_proxy_sync (BusType.SYSTEM,
                 "org.freedesktop.login1", "/org/freedesktop/login1");
@@ -107,7 +97,7 @@ namespace Utils {
     }
 
 
-    /* STUB (Milestone 1) -- begin JSCore bridge block
+    /* begin JSCore bridge block
     public static JSCore.Value js_run_desktop (Context ctx,
             JSCore.Object function,
             JSCore.Object thisObject,
@@ -337,7 +327,7 @@ namespace Utils {
         g.set_property (context, s, o, PropertyAttribute.None, null);
     }
 
-    */ // STUB (Milestone 1) -- end JSCore bridge block
+    */ // end JSCore bridge block
 
     public static string get_icon_path (string name, int size=24) {
         var icon = IconTheme.get_default ();

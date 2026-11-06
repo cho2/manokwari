@@ -557,12 +557,6 @@ public class PanelWindowHost : PanelAbstractWindow {
     private PanelTray tray;
     private new Wnck.Screen screen;
     private int num_visible_windows = 0;
-    // Milestone 3: brightness now goes through org.freedesktop.login1 (systemd-
-    // logind) + sysfs instead of org.gnome.SettingsDaemon.Power.Screen. logind
-    // only exposes a SetBrightness *method* (no getter) by design -- current
-    // value is read straight from sysfs, matching how brightnessctl and other
-    // standalone brightness tools do it. See find_backlight_device() /
-    // get_brightness_percent() / set_brightness_percent() below.
     private string? backlight_device = null;
     private int max_brightness = 0;
     private Login1Session? login1_session = null;
@@ -615,27 +609,6 @@ public class PanelWindowHost : PanelAbstractWindow {
           handleKey(key);
         });
         
-        // Milestone 5 Tahap 1/2: distributor-logo is provided by each distro's
-        // own branding package under a DIFFERENT convention per distro --
-        // there's no single universal answer here, so this tries a short
-        // list of known candidates in order rather than hardcoding one.
-        //
-        // Confirmed on real openSUSE Tumbleweed hardware (Tahap 1 testing):
-        // "distributor-logo" does NOT resolve via icon-theme lookup at all
-        // on a from-source install (no branding package pulled in as a
-        // dependency). The actual current distro logo lives at a fixed file
-        // path instead: /usr/share/pixmaps/distribution-logos/square-hicolor.svg
-        // (same filename for both Leap and Tumbleweed, but the image content
-        // differs per distro/variant -- that's *why* it's a fixed path
-        // rather than something themeable via icon name).
-        //
-        // Debian not yet tested (Milestone 5 status) -- its branding
-        // package (desktop-base) uses a different path convention entirely
-        // (/usr/share/images/desktop-base/), and an old (2011-era, GConf)
-        // reference suggests an icon-theme name of "debian-swirl", but
-        // that's unconfirmed for trixie. Included as a candidate below
-        // since it's a free, harmless check either way -- update this list
-        // once actually verified rather than trusting that guess.
         Gtk.Image? logo_image = null;
         var icon_theme = IconTheme.get_default ();
 
@@ -654,10 +627,6 @@ public class PanelWindowHost : PanelAbstractWindow {
             foreach (var path in candidate_files) {
                 if (FileUtils.test (path, FileTest.EXISTS)) {
                     try {
-                        // set_pixel_size() below only affects icon-name/gicon-
-                        // based images, not file-loaded ones -- rasterize the
-                        // SVG at the right size directly instead, or it could
-                        // render at whatever the file's default size is.
                         var pixbuf = new Gdk.Pixbuf.from_file_at_size (path, height, height);
                         logo_image = new Image.from_pixbuf (pixbuf);
                     } catch (Error e) {
@@ -668,9 +637,6 @@ public class PanelWindowHost : PanelAbstractWindow {
             }
         }
 
-        // Universal last resort: part of the freedesktop icon naming spec
-        // itself, not any specific distro's branding, so it resolves
-        // regardless of what's installed.
         if (logo_image == null) {
             logo_image = new Image.from_icon_name ("start-here", IconSize.LARGE_TOOLBAR);
         }
@@ -901,10 +867,6 @@ public class PanelWindowHost : PanelAbstractWindow {
     }
 
 
-    // Scans /sys/class/backlight for a device and records its max_brightness.
-    // Picks the first entry found -- good enough for the common single-panel
-    // laptop case this hobby project targets; multi-GPU setups with several
-    // backlight devices aren't handled specially.
     void find_backlight_device () {
         try {
             var dir = Dir.open ("/sys/class/backlight");

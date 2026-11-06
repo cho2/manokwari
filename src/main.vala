@@ -1,10 +1,6 @@
 using Gtk;
 int main (string[] args) {
 
-    // Milestone 3: unique-3.0 replaced with GLib.Application. register() claims
-    // the app id as a well-known D-Bus name on the session bus -- same mechanism
-    // Unique.App used internally, just via the generic freedesktop/GIO API instead
-    // of a dead GNOME-only library. Same app id string as before, unchanged.
     var app = new GLib.Application ("io.github.cho2.Manokwari", ApplicationFlags.FLAGS_NONE);
     try {
         app.register ();
@@ -39,10 +35,6 @@ int main (string[] args) {
     Gtk.init (ref args);
 
     PanelSessionManager.getInstance ();
-    // Milestone 3: Bus.own_name("org.gnome.Panel", ...) removed -- it only
-    // existed to signal gnome-session "the panel started", which no longer
-    // applies (see files/bin/manokwari-session). Same for `new PanelShell()`
-    // below -- see the comment in panel-shell.vala.
 
     // Desktop
     var d = new PanelDesktop ();

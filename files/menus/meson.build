@@ -1,4 +1,4 @@
-# Milestone 4: stopped installing manokwari-applications.menu. Nothing in
+# Stopped installing manokwari-applications.menu. Nothing in
 # this project parses it anymore -- the native app menu (Fase 1,
 # panel-menu-native.vala) uses GLib.AppInfo.get_all() directly, not the
 # freedesktop Desktop Menu Spec category hierarchy this file describes.

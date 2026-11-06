@@ -1,13 +1,11 @@
 using GLib;
 using Gtk;
-// STUB (Milestone 1): `using JSCore;` removed. JS-bridge block below guarded out.
 
 // This class prepares data in desktop 
 public class PanelDesktopData {
 
     FileMonitor desktop_monitor = null;
     StringBuilder json; // use StringBuilder to avoid appending immutable strings
-    // STUB (Milestone 1): static Context* jsContext; / JSCore.Object* jsObject; removed
     uint scheduled = 0;
     uint64 last_schedule = 0;
     string path;
@@ -49,10 +47,6 @@ public class PanelDesktopData {
     }
 
     bool kick_js () {
-        // STUB (Milestone 1): body that pushed updates into the JS context via
-        // jsContext/jsObject removed along with the JS bridge. Milestone 3 needs
-        // to decide the replacement notification path (e.g. WebKitUserContentManager
-        // postMessage, or a plain Vala signal if the frontend becomes native GTK).
         // Save the time
         var d = new DateTime.now_local();
         last_schedule = d.to_unix ();
@@ -119,7 +113,7 @@ public class PanelDesktopData {
         };
     }
 
-    /* STUB (Milestone 1) -- begin JSCore bridge block
+    /* begin JSCore bridge block
     public static JSCore.Object js_constructor (Context ctx,
             JSCore.Object constructor,
             JSCore.Value[] arguments,
@@ -233,6 +227,6 @@ public class PanelDesktopData {
         var s = new String.with_utf8_c_string ("DesktopData");
         g.set_property (context, s, o, PropertyAttribute.None, null);
     }
-    */ // STUB (Milestone 1) -- end JSCore bridge block
+    */ // end JSCore bridge block
 
 }

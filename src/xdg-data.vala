@@ -1,8 +1,7 @@
 using GLib;
 using Gtk;
-// STUB (Milestone 3): `using GMenu;` removed along with libgnome-menu-3.0.
-// update_tree()/populate() below guarded out -- see comment there.
-// STUB (Milestone 1): `using JSCore;` removed. JS-bridge block below guarded out.
+// using GMenu; removed along with libgnome-menu-3.0.
+// using JSCore; removed. JS-bridge block below guarded out.
 
 // This class opens an xdg menu and populates it
 public class PanelXdgData {
@@ -14,7 +13,7 @@ public class PanelXdgData {
     StringBuilder json; // use StringBuilder to avoid appending immutable strings
     int depth = 0;
     IconTheme icon;
-    // STUB (Milestone 1): static Context* jsContext; / JSCore.Object* jsObject; removed
+    // static Context* jsContext; / JSCore.Object* jsObject; removed
     uint scheduled = 0;
     uint64 last_schedule = 0;
 
@@ -57,7 +56,7 @@ public class PanelXdgData {
     }
 
     bool kick_js () {
-        // STUB (Milestone 1): JS-notification body removed along with the JS bridge.
+        // JS-notification body removed along with the JS bridge.
         // Save the time
         var d = new DateTime.now_local();
         last_schedule = d.to_unix ();
@@ -92,14 +91,7 @@ public class PanelXdgData {
         }
     }
 
-    // STUB (Milestone 3): update_tree()/populate() depended on GMenu.Tree
-    // (libgnome-menu-3.0), which is dropped now that both call sites of
-    // PanelXdgData are already dead code (one in the excluded panel-menu-html.vala,
-    // one inside the Milestone-1-guarded JS bridge block below). Reimplementing
-    // this with GDesktopAppInfo is deferred until the WebKit UI decision is made
-    // (Milestone 3) -- the right shape for "menu data" depends on whether that
-    // lands as webkit2gtk-4.1 (could keep a similar JSON-to-JS approach) or a
-    // native GTK rewrite (would populate widgets directly, no JSON at all).
+    // update_tree()/populate() depended on GMenu.Tree
     /*
     void update_tree (TreeDirectory root) {
         var iter = root.iter();
@@ -166,7 +158,7 @@ public class PanelXdgData {
         }
         json.append("]");
     }
-    */ // STUB (Milestone 3) -- end guarded GMenu.Tree block
+    */ // end guarded GMenu.Tree block
 
     static void put_to_desktop (string filename) {
         var input_file = File.new_for_path (filename);
@@ -222,7 +214,7 @@ public class PanelXdgData {
 
     }
 
-    /* STUB (Milestone 1) -- begin JSCore bridge block
+    /* begin JSCore bridge block
     public static JSCore.Object js_constructor (Context ctx,
             JSCore.Object constructor,
             JSCore.Value[] arguments,
@@ -342,7 +334,7 @@ public class PanelXdgData {
         g.set_property (context, s, o, PropertyAttribute.None, null);
     }
 
-    */ // STUB (Milestone 1) -- end JSCore bridge block
+    */ // end JSCore bridge block
 
     static void show_dialog (string message) {
         var dialog = new MessageDialog (null, DialogFlags.DESTROY_WITH_PARENT, MessageType.ERROR, ButtonsType.CLOSE, "%s", message);

@@ -1,11 +1,6 @@
 using Gtk;
-// STUB (Milestone 1): `using JSCore;` removed. JS-bridge block below guarded out.
+// using JSCore; removed. JS-bridge block below guarded out.
 
-// Milestone 3: org.gnome.SessionManager / .ClientPrivate removed along with
-// gnome-session itself. Manokwari no longer runs inside a gnome-session --
-// see files/bin/manokwari-session, which execs Openbox directly (picom
-// and manokwari itself started via Openbox's own autostart mechanism).
-//
 // reboot()/shutdown()/can_shutdown() now go through org.freedesktop.login1
 // (systemd-logind) instead -- same freedesktop-standard mechanism already
 // used for brightness (login1.vala). logout() has no systemd/logind
@@ -81,7 +76,7 @@ public class PanelSessionManager {
         }
     }
 
-    /* STUB (Milestone 1) -- begin JSCore bridge block
+    /* begin JSCore bridge block
     public static JSCore.Object js_constructor (Context ctx,
             JSCore.Object constructor,
             JSCore.Value[] arguments,
@@ -205,6 +200,6 @@ public class PanelSessionManager {
         var s = new String.with_utf8_c_string ("SessionManager");
         g.set_property (context, s, o, PropertyAttribute.None, null);
     }
-    */ // STUB (Milestone 1) -- end JSCore bridge block
+    */ // end JSCore bridge block
 
 }

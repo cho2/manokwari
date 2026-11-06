@@ -13,12 +13,12 @@ manokwari_panel_sources = [
     'utils.vala',
     'panel-hotkey.vala',
     'panel-session-manager.vala',
-    # 'panel-menu-html.vala',      # STUB (Milestone 1): needs WebKit, see Milestone 3
+    # 'panel-menu-html.vala',
     'panel-menu-native.vala',
     'xdg-data.vala',
     'panel-user.vala',
     'panel-desktop.vala',
-    # 'panel-desktop-html.vala',   # STUB (Milestone 1): needs WebKit, see Milestone 3
+    # 'panel-desktop-html.vala',
     'panel-desktop-data.vala',
     'panel-calendar.vala',
     'animated-property.vala',
