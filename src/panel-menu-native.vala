@@ -381,7 +381,7 @@ public class PanelMenuHTML : Gtk.Box {
 
     Gtk.Widget build_search () {
         search_entry = new Gtk.SearchEntry ();
-        search_entry.placeholder_text = _("Search applications...");
+        search_entry.placeholder_text = _("Type to search...");
         search_entry.margin_start = 10;
         search_entry.margin_end = 10;
         search_entry.search_changed.connect (populate_apps);
